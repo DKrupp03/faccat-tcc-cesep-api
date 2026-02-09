@@ -10,41 +10,89 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_21_211631) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_09_192952) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "anamneses", force: :cascade do |t|
-    t.boolean "alcoholic", default: false
+    t.jsonb "anamnese_data", default: {}, null: false
+    t.integer "anamnese_type", null: false
     t.datetime "created_at", null: false
-    t.text "disease_history"
-    t.string "emergency_contact"
-    t.boolean "healthy_eating", default: false
-    t.text "initial_complaint"
-    t.text "medications"
     t.text "observations"
-    t.integer "patient_id"
-    t.boolean "physical_activity", default: false
-    t.boolean "smoking", default: false
-    t.text "symptom_time"
+    t.integer "patient_id", null: false
+    t.integer "therapist_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["anamnese_data"], name: "index_anamneses_on_anamnese_data", using: :gin
+    t.index ["anamnese_type"], name: "index_anamneses_on_anamnese_type"
     t.index ["patient_id"], name: "index_anamneses_on_patient_id"
+    t.index ["therapist_id", "patient_id"], name: "index_anamnese_unique", unique: true
+    t.index ["therapist_id"], name: "index_anamneses_on_therapist_id"
+  end
+
+  create_table "patient_progresses", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.text "observations", null: false
+    t.integer "service_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_id"], name: "index_patient_progresses_on_service_id"
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "expiration_date", null: false
+    t.date "payment_date"
+    t.integer "payment_method"
+    t.integer "payment_status", default: 0, null: false
+    t.integer "service_id", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "value", precision: 10, scale: 2, null: false
+    t.index ["service_id"], name: "index_payments_on_service_id"
+  end
+
+  create_table "services", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "datetime_end", null: false
+    t.datetime "datetime_start", null: false
+    t.text "observations"
+    t.integer "patient_id", null: false
+    t.integer "service_status", default: 0, null: false
+    t.integer "service_type", null: false
+    t.integer "therapist_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["patient_id"], name: "index_services_on_patient_id"
+    t.index ["therapist_id"], name: "index_services_on_therapist_id"
   end
 
   create_table "users", force: :cascade do |t|
+    t.string "address"
     t.date "birth", null: false
-    t.string "cpf", null: false
+    t.string "cpf"
     t.datetime "created_at", null: false
     t.string "crp"
-    t.string "email", null: false
+    t.decimal "default_value", precision: 10, scale: 2
+    t.integer "education_level"
+    t.string "email"
     t.text "extra"
     t.integer "gender", null: false
+    t.integer "marital_status"
     t.string "name", null: false
-    t.string "phone", null: false
+    t.string "occupation"
+    t.jsonb "parent", default: {}
+    t.string "phone"
     t.string "rg"
+    t.integer "therapist_id"
     t.datetime "updated_at", null: false
     t.integer "user_type", null: false
+    t.index ["therapist_id"], name: "index_users_on_therapist_id"
   end
 
   add_foreign_key "anamneses", "users", column: "patient_id"
+  add_foreign_key "anamneses", "users", column: "therapist_id"
+  add_foreign_key "patient_progresses", "services"
+  add_foreign_key "payments", "services"
+  add_foreign_key "services", "users", column: "patient_id"
+  add_foreign_key "services", "users", column: "therapist_id"
+  add_foreign_key "users", "users", column: "therapist_id"
 end

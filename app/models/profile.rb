@@ -1,4 +1,6 @@
 class Profile < ApplicationRecord
+  has_one(:user, dependent: :destroy)
+
   belongs_to(:therapist, class_name: "Profile", optional: true)
   has_many(:patients, class_name: "Profile", foreign_key: :therapist_id)
 

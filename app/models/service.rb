@@ -1,6 +1,6 @@
 class Service < ApplicationRecord
-  belongs_to(:patient, class_name: "User")
-  belongs_to(:therapist, class_name: "User")
+  belongs_to(:patient, class_name: "Profile")
+  belongs_to(:therapist, class_name: "Profile")
   has_one(:patient_progress, dependent: :destroy)
   has_one(:payment, dependent: :destroy)
 
@@ -34,13 +34,13 @@ class Service < ApplicationRecord
   private
 
   def therapist_is_valid
-    unless User.exists?(id: therapist_id, user_type: :therapist)
+    unless Profile.exists?(id: therapist_id, role: :therapist)
       errors.add(:therapist_id, "Teraputa inválido!")
     end
   end
 
   def patient_is_valid
-    unless User.exists?(id: patient_id, user_type: :patient)
+    unless Profile.exists?(id: patient_id, role: :patient)
       errors.add(:patient_id, "Paciente inválido!")
     end
   end

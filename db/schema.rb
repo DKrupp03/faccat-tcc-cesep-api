@@ -51,6 +51,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_192952) do
     t.index ["service_id"], name: "index_payments_on_service_id"
   end
 
+  create_table "profiles", force: :cascade do |t|
+    t.string "address"
+    t.date "birth", null: false
+    t.string "cpf"
+    t.datetime "created_at", null: false
+    t.string "crp"
+    t.decimal "default_value", precision: 10, scale: 2
+    t.integer "education_level"
+    t.text "extra"
+    t.integer "gender", null: false
+    t.integer "marital_status"
+    t.string "name", null: false
+    t.string "occupation"
+    t.jsonb "parent", default: {}
+    t.string "phone"
+    t.string "rg"
+    t.integer "role", null: false
+    t.integer "therapist_id"
+    t.datetime "updated_at", null: false
+    t.index ["therapist_id"], name: "index_profiles_on_therapist_id"
+  end
+
   create_table "services", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "datetime_end", null: false
@@ -65,34 +87,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_192952) do
     t.index ["therapist_id"], name: "index_services_on_therapist_id"
   end
 
-  create_table "users", force: :cascade do |t|
-    t.string "address"
-    t.date "birth", null: false
-    t.string "cpf"
-    t.datetime "created_at", null: false
-    t.string "crp"
-    t.decimal "default_value", precision: 10, scale: 2
-    t.integer "education_level"
-    t.string "email"
-    t.text "extra"
-    t.integer "gender", null: false
-    t.integer "marital_status"
-    t.string "name", null: false
-    t.string "occupation"
-    t.jsonb "parent", default: {}
-    t.string "phone"
-    t.string "rg"
-    t.integer "therapist_id"
-    t.datetime "updated_at", null: false
-    t.integer "user_type", null: false
-    t.index ["therapist_id"], name: "index_users_on_therapist_id"
-  end
-
-  add_foreign_key "anamneses", "users", column: "patient_id"
-  add_foreign_key "anamneses", "users", column: "therapist_id"
+  add_foreign_key "anamneses", "profiles", column: "patient_id"
+  add_foreign_key "anamneses", "profiles", column: "therapist_id"
   add_foreign_key "patient_progresses", "services"
   add_foreign_key "payments", "services"
-  add_foreign_key "services", "users", column: "patient_id"
-  add_foreign_key "services", "users", column: "therapist_id"
-  add_foreign_key "users", "users", column: "therapist_id"
+  add_foreign_key "profiles", "profiles", column: "therapist_id"
+  add_foreign_key "services", "profiles", column: "patient_id"
+  add_foreign_key "services", "profiles", column: "therapist_id"
 end

@@ -1,24 +1,24 @@
 timestamp = Time.now.to_i
 
-admin = User.create(
+admin = Profile.create(
   name: "Admin #{timestamp}",
   gender: :male,
   birth: Date.new(2003, 4, 28),
-  user_type: :admin
+  role: :admin
 )
 
-therapist = User.create(
+therapist = Profile.create(
   name: "Terapeuta #{timestamp}",
   gender: :female,
   birth: Date.new(1985, 1, 1),
-  user_type: :therapist
+  role: :therapist
 )
 
-patient = User.create(
+patient = Profile.create(
   name: "Paciente #{timestamp}",
   gender: :female,
   birth: Date.new(1985, 1, 1),
-  user_type: :patient,
+  role: :patient,
   therapist: therapist
 )
 

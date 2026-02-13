@@ -1,11 +1,11 @@
-class CreateAnamnese < ActiveRecord::Migration[8.1]
+class CreateAnamneses < ActiveRecord::Migration[8.1]
   def change
     create_table :anamneses do |t|
       t.integer(:anamnese_type, null: false)
       t.jsonb(:anamnese_data, null: false, default: {})
       t.text(:observations, default: nil)
-      t.references(:patient, type: :int, null: false, foreign_key: { to_table: :users })
-      t.references(:therapist, type: :int, null: false, foreign_key: { to_table: :users })
+      t.references(:patient, type: :int, null: false, foreign_key: { to_table: :profiles })
+      t.references(:therapist, type: :int, null: false, foreign_key: { to_table: :profiles })
       t.timestamps
     end
 

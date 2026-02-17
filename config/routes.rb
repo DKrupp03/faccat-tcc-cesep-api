@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   defaults format: :json do
     devise_for(:users,
       path: "",
-      skip: [:passwords, :confirmations],
+      skip: [:confirmations],
       path_names: {
         sign_in: "login",
         sign_out: "logout",
@@ -10,7 +10,8 @@ Rails.application.routes.draw do
       },
       controllers: {
         sessions: "sessions",
-        registrations: "registrations"
+        registrations: "registrations",
+        passwords: "passwords"
       }
     )
   end

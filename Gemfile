@@ -55,3 +55,5 @@ group :development, :test do
   gem "pry"
   gem "pry-rails"
 end
+
+gem "letter_opener", "~> 1.10"

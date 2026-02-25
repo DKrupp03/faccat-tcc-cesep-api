@@ -5,7 +5,6 @@ class CreatePayments < ActiveRecord::Migration[8.1]
       t.date(:expiration_date, null: false)
       t.date(:payment_date)
       t.integer(:payment_method)
-      t.integer(:payment_status, null: false, default: 0)
       t.references(:service, type: :int, null: false, foreign_key: { to_table: :services })
       t.timestamps
     end

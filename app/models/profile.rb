@@ -10,13 +10,16 @@ class Profile < ApplicationRecord
   has_many(:therapist_services, class_name: "Service", foreign_key: :therapist_id, dependent: :nullify)
   has_many(:patient_services, class_name: "Service", foreign_key: :patient_id, dependent: :destroy)
 
-  validates(:name, presence: true, uniqueness: { case_sensitive: true }, length: { minimum: 3, maximum: 50 })
+  validates(:name, presence: true, uniqueness: { case_sensitive: true }, length: { minimum: 3 })
   validates(:gender, presence: true)
-  validates(:birth, presence: true)
-  validates(:default_value, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true)
+  validates(:birth, presence: true, comparison: { less_than: -> { Date.current } })
+  validates(
+    :default_value,
+    numericality: { greater_than_or_equal_to: 0 },
+    allow_nil: true,
+    if: -> { role == :patient }
+  )
   validates(:role, presence: true)
-
-  validate(:therapist_is_valid, if: -> { therapist_id.present? })
 
   enum(:gender, { male: 0, female: 1, other: 2 })
   enum(:marital_status, { single: 0, married: 1, divorced: 2, widowed: 3 })
@@ -24,12 +27,4 @@ class Profile < ApplicationRecord
     high_school_complete: 3, technical: 4, higher_education_incomplete: 5, higher_education_complete: 6,
     postgraduate: 7, masters: 8, doctorate: 9 })
   enum(:role, { admin: 0, therapist: 1, patient: 2 })
-
-  private
-
-  def therapist_is_valid
-    unless Profile.exists?(id: therapist_id, role: :therapist)
-      errors.add(:therapist_id, "Teraputa inválido!")
-    end
-  end
 end

@@ -44,7 +44,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_170630) do
     t.date "expiration_date", null: false
     t.date "payment_date"
     t.integer "payment_method"
-    t.integer "payment_status", default: 0, null: false
     t.integer "service_id", null: false
     t.datetime "updated_at", null: false
     t.decimal "value", precision: 10, scale: 2, null: false

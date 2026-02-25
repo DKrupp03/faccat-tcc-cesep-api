@@ -27,4 +27,33 @@ class Profile < ApplicationRecord
     high_school_complete: 3, technical: 4, higher_education_incomplete: 5, higher_education_complete: 6,
     postgraduate: 7, masters: 8, doctorate: 9 })
   enum(:role, { admin: 0, therapist: 1, patient: 2 })
+
+  def show
+    profile = self.to_o
+    profile.store(:user, self.user)
+
+    if self.role == :therapist
+      profile.store(:patients, self.patients)
+      profile.store(:patient_anamnese, self.patient_anamnese)
+      profile.store(:patient_services, self.patient_services)
+    end
+
+    if self.role == :patient
+      profile.store(:therapist, self.therapist)
+      profile.store(:therapist_anamneses, self.therapist_anamneses)
+      profile.store(:therapist_services, self.therapist_services)
+    end
+
+    profile
+  end
+
+  def self.by_therapist(user: current_user)
+    where(therapist_id: user.id)
+  end
+
+  def self.allowed(user: current_user)
+    if user.therapist?
+      by_therapist(user: user)
+    end
+  end
 end

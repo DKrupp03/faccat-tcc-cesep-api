@@ -31,4 +31,25 @@ class Service < ApplicationRecord
     # Psicologia Organizacional
     organizational_psychology_career_guidance: 9, organizational_psychology_worker_health: 10
   })
+
+  def show
+    service = self.to_o
+    service.store(:patient, self.patient)
+    service.store(:therapist, self.therapist)
+    service.store(:patient_progress, self.patient_progress)
+    service.store(:payment, self.payment)
+    service
+  end
+
+  def self.by_therapist(user: current_user)
+    where(therapist_id: user.id)
+  end
+
+  def self.allowed(user: current_user)
+    if user.therapist?
+      by_therapist(user: user)
+    else
+      all
+    end
+  end
 end

@@ -8,4 +8,11 @@ class Anamnese < ApplicationRecord
   validates(:therapist_id, presence: true)
 
   enum(:anamnese_type, { child: 0, adolescent: 1, adult: 2 })
+
+  def show
+    anamnese = self.to_o
+    anamnese.store(:patient, self.patient)
+    anamnese.store(:therapist, self.therapist)
+    anamnese
+  end
 end

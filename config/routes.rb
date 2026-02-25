@@ -15,9 +15,5 @@ Rails.application.routes.draw do
     )
   end
 
-  resources(:users, only: [:index]) do
-    collection do
-      get(:get_current_user)
-    end
-  end
+  resources(:profiles, only: [:index, :show, :create, :update])
 end

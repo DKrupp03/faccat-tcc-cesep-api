@@ -13,7 +13,7 @@ class Payment < ApplicationRecord
   enum(:payment_method, { cash: 0, credit_card: 1, debit_card: 2, bank_slip: 3, bank_transfer: 4 })
 
   def show
-    payment = self.to_o
+    payment = self.attributes
     payment.store(:service, self.service)
     payment.store(:payment_status, self.payment_status)
     payment
@@ -29,11 +29,8 @@ class Payment < ApplicationRecord
     end
   end
 
-  def self.allowed(user: current_user)
-    if user.therapist?
-      joins(:service).where(services: { therapist_id: user.id })
-    else
-      all
-    end
+  def self.allowed(profile = User.current.profile)
+    return joins(:service).where(services: { therapist_id: profile.id }) profile.therapist?
+    return all
   end
 end

@@ -7,7 +7,7 @@ class PatientProgress < ApplicationRecord
   validates(:service_id, presence: true)
 
   def show
-    progress = self.to_o
+    progress = self.attributes
     progress.store(:service, self.service)
     progress
   end

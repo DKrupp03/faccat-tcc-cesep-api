@@ -29,31 +29,51 @@ class Profile < ApplicationRecord
   enum(:role, { admin: 0, therapist: 1, patient: 2 })
 
   def show
-    profile = self.to_o
+    profile = self.attributes
     profile.store(:user, self.user)
 
-    if self.role == :therapist
+    if self.therapist?
       profile.store(:patients, self.patients)
       profile.store(:patient_anamnese, self.patient_anamnese)
       profile.store(:patient_services, self.patient_services)
     end
 
-    if self.role == :patient
+    if self.patient?
       profile.store(:therapist, self.therapist)
       profile.store(:therapist_anamneses, self.therapist_anamneses)
       profile.store(:therapist_services, self.therapist_services)
     end
 
-    profile
+    return profile
   end
 
-  def self.by_therapist(user: current_user)
-    where(therapist_id: user.id)
+  def self.by_role(role)
+    return where(role: role) if role.present?
+    return all
   end
 
-  def self.allowed(user: current_user)
-    if user.therapist?
-      by_therapist(user: user)
-    end
+  def self.by_active(active)
+    return where(active: active) if active.present?
+    return all
+  end
+
+  def self.by_therapist_id(therapist_id)
+    return where(therapist_id: therapist_id, role: :patient) if therapist_id.present?
+    return all
+  end
+
+  def self.by_patient_id(patient_id)
+    return where(patient_id: patient_id, role: :patient) if patient_id.present?
+    return all
+  end
+
+  def self.allowed(profile = User.current.profile)
+    return by_therapist_id(profile.id) if profile.therapist?
+    return all
+  end
+
+  def allowed?(profile = User.current.profile)
+    return self.id == profile.id || self.therapist_id == profile.id if profile.therapist?
+    return true
   end
 end

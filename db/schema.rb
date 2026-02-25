@@ -51,6 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_170630) do
   end
 
   create_table "profiles", force: :cascade do |t|
+    t.boolean "active", default: true
     t.string "address"
     t.date "birth", null: false
     t.string "cpf"

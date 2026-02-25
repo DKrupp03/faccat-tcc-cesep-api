@@ -7,8 +7,6 @@ class User < ApplicationRecord
 
   validates(:profile_id, presence: true)
   validates(:email, presence: true)
-  validates(:encrypted_password, presence: true)
-  validates(:jti, presence: true)
 
   validates(
     :password,
@@ -32,8 +30,16 @@ class User < ApplicationRecord
   )
 
   def show
-    user = self.to_o
+    user = self.attributes
     user.store(:profile, self.profile)
     user
+  end
+
+  def self.current
+    Thread.current[:user]
+  end
+
+  def self.current=(user)
+    Thread.current[:user] = user
   end
 end

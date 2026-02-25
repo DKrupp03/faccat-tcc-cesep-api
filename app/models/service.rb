@@ -33,7 +33,7 @@ class Service < ApplicationRecord
   })
 
   def show
-    service = self.to_o
+    service = self.attributes
     service.store(:patient, self.patient)
     service.store(:therapist, self.therapist)
     service.store(:patient_progress, self.patient_progress)
@@ -41,15 +41,13 @@ class Service < ApplicationRecord
     service
   end
 
-  def self.by_therapist(user: current_user)
-    where(therapist_id: user.id)
+  def self.by_therapist_id(therapist_id)
+    return where(therapist_id: therapist_id) if therapist_id.present?
+    return all
   end
 
-  def self.allowed(user: current_user)
-    if user.therapist?
-      by_therapist(user: user)
-    else
-      all
-    end
+  def self.allowed(profile = User.current.profile)
+    return by_therapist_id(profile.id) if profile.therapist?
+    return all
   end
 end

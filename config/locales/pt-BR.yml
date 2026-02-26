@@ -1,0 +1,21 @@
+pt-BR:
+  activerecord:
+    models:
+      profile:
+        one: "Perfil"
+        other: "Perfis"
+    errors:
+      messages:
+        blank: "É Necessário preencher este campo!"
+        too_short: "É muito curto (mínimo %{count} caracteres)!"
+        too_long: "É muito longo (máximo %{count} caracteres)!"
+        greater_than_or_equal_to: "Deve ser maior ou igual a %{count}!"
+        not_found: "%{model} não encontrado!"
+        not_allowed: "Acesso não permitido!"
+      models:
+        profile:
+          attributes:
+            name:
+              taken: "Já existe outro perfil com esse nome!"
+            birth:
+              less_than: "Deve ser anterior à data de hoje!"

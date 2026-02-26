@@ -4,10 +4,10 @@ class ProfilesController < ApplicationController
   before_action(:check_permissions, except: [:index])
 
 	def index
-    profiles = Profile.by_name(params[:name])
-      .by_therapist_id(params[:therapist_id])
-      .by_active(params[:active])
-      .by_role(params[:role])
+    profiles = Profile.by_name(filter_params[:name])
+      .by_therapist_id(filter_params[:therapist_id])
+      .by_active(filter_params[:active])
+      .by_role(filter_params[:role])
       .allowed
 
 		render_json_success({ profiles: profiles })
@@ -48,7 +48,23 @@ class ProfilesController < ApplicationController
 
   def set_profile
     @profile = Profile.find_by_id(params[:id])
-    return render_json_errors("Perfil não encontrado!") if @profile.nil?
+
+    if @profile.nil?
+      return render_json_errors(
+        I18n.t("activerecord.errors.messages.not_found", model: Profile.model_name.human)
+      )
+    end
+  end
+
+  def filter_params
+    return {} unless params[:profiles].present?
+
+    params.permit(profiles: [
+      :name,
+      :therapist_id,
+      :active,
+      :role
+    ])[:profiles].to_h.symbolize_keys
   end
 
   def profile_params

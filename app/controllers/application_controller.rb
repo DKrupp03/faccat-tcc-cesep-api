@@ -20,6 +20,8 @@ class ApplicationController < ActionController::API
   end
 
   def render_not_allowed
-    render_json_errors("Acesso não permitido!")
+    render_json_errors(
+      I18n.t("activerecord.errors.messages.not_allowed")
+    )
   end
 end

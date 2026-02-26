@@ -49,11 +49,7 @@ class ProfilesController < ApplicationController
   def set_profile
     @profile = Profile.find_by_id(params[:id])
 
-    if @profile.nil?
-      return render_json_errors(
-        I18n.t("activerecord.errors.messages.not_found", model: Profile.model_name.human)
-      )
-    end
+    return render_not_found(Profile) if @profile.nil?
   end
 
   def filter_params

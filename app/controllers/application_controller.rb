@@ -24,4 +24,10 @@ class ApplicationController < ActionController::API
       I18n.t("activerecord.errors.messages.not_allowed")
     )
   end
+
+  def render_not_found(model)
+    render_json_errors(
+      I18n.t("activerecord.errors.messages.not_found", model: model.model_name.human)
+    )
+  end
 end

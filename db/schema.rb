@@ -79,8 +79,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_170630) do
     t.datetime "datetime_start", null: false
     t.text "observations"
     t.integer "patient_id", null: false
-    t.integer "service_status", default: 0, null: false
     t.integer "service_type", null: false
+    t.integer "status", default: 0, null: false
     t.integer "therapist_id", null: false
     t.datetime "updated_at", null: false
     t.index ["patient_id"], name: "index_services_on_patient_id"

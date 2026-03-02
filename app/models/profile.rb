@@ -67,12 +67,12 @@ class Profile < ApplicationRecord
     return all
   end
 
-  def self.allowed(profile = User.current&.profile)
+  def self.allowed(profile = User.current.profile)
     return where("id = :id OR therapist_id = :id", id: profile.id) if profile.therapist?
     return all
   end
 
-  def allowed?(profile = User.current&.profile)
+  def allowed?(profile = User.current.profile)
     return self.id == profile.id || self.therapist_id == profile.id if profile.therapist?
     return true
   end

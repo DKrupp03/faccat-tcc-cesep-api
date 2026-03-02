@@ -12,11 +12,11 @@ class Service < ApplicationRecord
   )
   validates(:datetime_end, presence: true, comparison: { greater_than: :datetime_start })
   validates(:service_type, presence: true)
-  validates(:service_status, presence: true)
+  validates(:status, presence: true)
   validates(:patient_id, presence: true)
   validates(:therapist_id, presence: true)
 
-  enum(:service_status, { scheduled: 0, confirmed: 1, attended: 2, no_show: 3, cancelled: 4 })
+  enum(:status, { scheduled: 0, confirmed: 1, attended: 2, no_show: 3, cancelled: 4 })
   enum(:service_type, {
     # Psicologia Clínica – Psicoterapias
     clinical_psychology_tcc: 0, clinical_psychology_psychoanalysis: 1,
@@ -41,13 +41,43 @@ class Service < ApplicationRecord
     service
   end
 
+  def self.by_date_start(date_start)
+    return where("datetime_start >= ?", date_start) if date_start.present?
+    return all
+  end
+
+  def self.by_date_end(date_end)
+    return where("datetime_end <= ?", date_end) if date_end.present?
+    return all
+  end
+
+  def self.by_patient_id(patient_id)
+    return where(patient_id: patient_id) if patient_id.present?
+    return all
+  end
+
   def self.by_therapist_id(therapist_id)
     return where(therapist_id: therapist_id) if therapist_id.present?
+    return all
+  end
+
+  def self.by_service_type(service_type)
+    return where(service_type: service_type) if service_type.present?
+    return all
+  end
+
+  def self.by_status(status)
+    return where(status: status) if status.present?
     return all
   end
 
   def self.allowed(profile = User.current.profile)
     return by_therapist_id(profile.id) if profile.therapist?
     return all
+  end
+
+  def allowed?(profile = User.current.profile)
+    return self.therapist_id == profile.id if profile.therapist?
+    return true
   end
 end

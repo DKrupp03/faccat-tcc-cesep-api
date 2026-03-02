@@ -10,6 +10,10 @@ class ProfilesController < ApplicationController
       .by_role(filter_params[:role])
       .allowed
 
+    if params[:page].present? && params[:per_page].present?
+      profiles = profiles.page(params[:page]).per(params[:per_page] || 30)
+    end
+
 		render_json_success({ profiles: profiles })
 	end
 
@@ -42,7 +46,7 @@ class ProfilesController < ApplicationController
     when "create"
       return render_not_allowed() if !User.current.profile.admin?
     when "update", "show"
-      return render_not_allowed() if !User.current.profile.allowed?
+      return render_not_allowed() if !@profile.allowed?
     end
   end
 

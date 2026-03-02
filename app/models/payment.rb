@@ -30,7 +30,7 @@ class Payment < ApplicationRecord
   end
 
   def self.allowed(profile = User.current.profile)
-    return joins(:service).where(services: { therapist_id: profile.id }) profile.therapist?
+    return joins(:service).where(services: { therapist_id: profile.id }) if profile.therapist?
     return all
   end
 end

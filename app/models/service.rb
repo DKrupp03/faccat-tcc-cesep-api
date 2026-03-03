@@ -13,8 +13,6 @@ class Service < ApplicationRecord
   validates(:datetime_end, presence: true, comparison: { greater_than: :datetime_start })
   validates(:service_type, presence: true)
   validates(:status, presence: true)
-  validates(:patient_id, presence: true)
-  validates(:therapist_id, presence: true)
 
   enum(:status, { scheduled: 0, confirmed: 1, attended: 2, no_show: 3, cancelled: 4 })
   enum(:service_type, {

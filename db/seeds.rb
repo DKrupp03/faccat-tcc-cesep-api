@@ -62,7 +62,7 @@ patient_user.save!
     patient: patient_profile,
     therapist: therapist_profile
   )
-  
+
   payment = Payment.create(
     value: 100.00,
     expiration_date: Date.current + (30 + times).days,

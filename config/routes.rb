@@ -18,4 +18,6 @@ Rails.application.routes.draw do
   resources(:profiles, only: [:index, :show, :create, :update])
 
   resources(:services, only: [:index, :show, :create, :update, :destroy])
+
+  resources(:payments, only: [:index, :show, :create, :update, :destroy])
 end

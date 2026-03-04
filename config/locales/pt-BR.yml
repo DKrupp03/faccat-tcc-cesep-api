@@ -5,8 +5,8 @@ pt-BR:
         one: "Perfil"
         other: "Perfis"
       service:
-        one: "Atendimento"
-        other: "Atendimentos"
+        one: "Pagamento"
+        other: "Pagamentos"
     errors:
       messages:
         blank: "É Necessário preencher este campo!"
@@ -29,3 +29,9 @@ pt-BR:
               greater_than_or_equal_to: "Deve ser maior ou igual à data e hora atual!"
             datetime_end:
               greater_than: "Deve ser maior que a data e hora de início!"
+        payment:
+          attributes:
+            expiration_date:
+              greater_than_or_equal_to: "Deve ser maior que a data atual!"
+            service:
+              taken: "Já existe um pagamento associado a este serviço!"

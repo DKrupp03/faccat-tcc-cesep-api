@@ -4,20 +4,24 @@ class ServicesController < ApplicationController
   before_action(:check_permissions, except: [:index, :create])
 
 	def index
-    services = Service.by_name(filter_params[:name])
+    services = Service.by_status(filter_params[:status])
       .by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
       .by_patient_id(filter_params[:patient_id])
       .by_therapist_id(filter_params[:therapist_id])
       .by_service_type(filter_params[:service_type])
-      .by_status(filter_params[:status])
       .allowed
+
+    total = services.count
 
     if params[:page].present? && params[:per_page].present?
       services = services.page(params[:page]).per(params[:per_page] || 30)
     end
 
-		render_json_success({ services: services })
+		render_json_success({
+      services: services.map(&:show),
+      total: total
+    })
 	end
 
   def show
@@ -36,7 +40,7 @@ class ServicesController < ApplicationController
 
   def update
      if @service.update(service_params)
-      render_success({ service: @service.show })
+      render_json_success({ service: @service.show })
     else
       render_json_errors(@service.errors)
     end

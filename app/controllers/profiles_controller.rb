@@ -10,11 +10,16 @@ class ProfilesController < ApplicationController
       .by_role(filter_params[:role])
       .allowed
 
+    total = profiles.count
+
     if params[:page].present? && params[:per_page].present?
       profiles = profiles.page(params[:page]).per(params[:per_page] || 30)
     end
 
-		render_json_success({ profiles: profiles })
+		render_json_success({
+      profiles: profiles.map(&:show),
+      total: total
+    })
 	end
 
   def show
@@ -33,7 +38,7 @@ class ProfilesController < ApplicationController
 
   def update
      if @profile.update(profile_params)
-      render_success({ profile: @profile.show })
+      render_json_success({ profile: @profile.show })
     else
       render_json_errors(@profile.errors)
     end

@@ -7,6 +7,12 @@ pt-BR:
       service:
         one: "Pagamento"
         other: "Pagamentos"
+      payment:
+        one: "Pagamento"
+        other: "Pagamentos"
+      patient_progress:
+        one: "Progresso do paciente"
+        other: "Progressos do paciente"
     errors:
       messages:
         blank: "É Necessário preencher este campo!"
@@ -33,5 +39,9 @@ pt-BR:
           attributes:
             expiration_date:
               greater_than_or_equal_to: "Deve ser maior que a data atual!"
+            service:
+              taken: "Já existe um pagamento associado a este serviço!"
+        patient_progress:
+          attributes:
             service:
               taken: "Já existe um pagamento associado a este serviço!"

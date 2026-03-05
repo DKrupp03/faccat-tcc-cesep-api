@@ -14,7 +14,7 @@ class PaymentsController < ApplicationController
 
     total = payments.count
 
-    if params[:page].present? && params[:per_page].present?
+    if params[:page].present?
       payments = payments.page(params[:page]).per(params[:per_page] || 30)
     end
 

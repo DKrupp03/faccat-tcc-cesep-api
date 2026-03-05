@@ -14,7 +14,7 @@ class ServicesController < ApplicationController
 
     total = services.count
 
-    if params[:page].present? && params[:per_page].present?
+    if params[:page].present?
       services = services.page(params[:page]).per(params[:per_page] || 30)
     end
 

@@ -10,6 +10,8 @@ class Profile < ApplicationRecord
   has_many(:therapist_services, class_name: "Service", foreign_key: :therapist_id, dependent: :nullify)
   has_many(:patient_services, class_name: "Service", foreign_key: :patient_id, dependent: :destroy)
 
+  has_many(:patient_progresses, through: :patient_services, source: :patient_progress)
+
   validates(:name, presence: true, uniqueness: { case_sensitive: true }, length: { minimum: 3 })
   validates(:gender, presence: true)
   validates(:birth, presence: true, comparison: { less_than: -> { Date.current } })

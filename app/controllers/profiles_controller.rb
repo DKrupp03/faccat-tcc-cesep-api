@@ -12,7 +12,7 @@ class ProfilesController < ApplicationController
 
     total = profiles.count
 
-    if params[:page].present? && params[:per_page].present?
+    if params[:page].present?
       profiles = profiles.page(params[:page]).per(params[:per_page] || 30)
     end
 

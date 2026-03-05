@@ -15,7 +15,9 @@ Rails.application.routes.draw do
     )
   end
 
-  resources(:profiles, only: [:index, :show, :create, :update])
+  resources(:profiles, only: [:index, :show, :create, :update]) do
+    resources(:patient_progresses, only: [:index, :show, :create, :update])
+  end
 
   resources(:services, only: [:index, :show, :create, :update, :destroy])
 

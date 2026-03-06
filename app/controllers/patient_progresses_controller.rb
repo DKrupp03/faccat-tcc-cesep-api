@@ -2,7 +2,7 @@ class PatientProgressesController < ApplicationController
   before_action(:authenticate_user!)
   before_action(:set_profile)
   before_action(:set_progress, only: [:show, :update, :destroy])
-  before_action(:check_permissions, except: [:index, :create])
+  before_action(:check_permissions)
 
 	def index
     progresses = @profile.patient_progresses.by_date_start(filter_params[:date_start])
@@ -55,6 +55,10 @@ class PatientProgressesController < ApplicationController
 
   def check_permissions
     case params[:action]
+    when "index", "create"
+      if !User.current.profile.admin? && @profile.therapist_id != User.current.profile_id
+        return render_not_allowed()
+      end
     when "update", "destroy", "show"
       return render_not_allowed() if !@progress.allowed?
     end

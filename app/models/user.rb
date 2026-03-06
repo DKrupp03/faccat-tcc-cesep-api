@@ -5,7 +5,6 @@ class User < ApplicationRecord
 
   belongs_to(:profile)
 
-  validates(:profile_id, presence: true)
   validates(:email, presence: true)
 
   validates(

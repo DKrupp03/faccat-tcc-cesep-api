@@ -13,6 +13,9 @@ pt-BR:
       patient_progress:
         one: "Progresso do paciente"
         other: "Progressos do paciente"
+      anamnese:
+        one: "Anamnese"
+        other: "Anamneses"
     errors:
       messages:
         blank: "É Necessário preencher este campo!"

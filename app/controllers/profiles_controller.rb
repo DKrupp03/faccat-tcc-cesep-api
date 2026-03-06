@@ -8,6 +8,7 @@ class ProfilesController < ApplicationController
       .by_therapist_id(filter_params[:therapist_id])
       .by_active(filter_params[:active])
       .by_role(filter_params[:role])
+      .order(order_by)
       .allowed
 
     total = profiles.count
@@ -93,5 +94,16 @@ class ProfilesController < ApplicationController
         :active,
         :therapist_id
       ).to_h.symbolize_keys
+  end
+
+  def order_by
+    case params[:order_by]
+    when "name_asc"
+      { name: :asc }
+    when "name_desc"
+      { name: :desc }
+    else
+      { name: :asc }
+    end
   end
 end

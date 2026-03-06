@@ -10,6 +10,7 @@ class ServicesController < ApplicationController
       .by_patient_id(filter_params[:patient_id])
       .by_therapist_id(filter_params[:therapist_id])
       .by_service_type(filter_params[:service_type])
+      .order(order_by)
       .allowed
 
     total = services.count
@@ -93,5 +94,16 @@ class ServicesController < ApplicationController
         :patient_id,
         :therapist_id
       ).to_h.symbolize_keys
+  end
+
+  def order_by
+    case params[:order_by]
+    when "datetime_start_asc"
+      { datetime_start: :asc }
+    when "datetime_start_desc"
+      { datetime_start: :desc }
+    else
+      { datetime_start: :desc }
+    end
   end
 end

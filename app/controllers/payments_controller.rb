@@ -10,6 +10,7 @@ class PaymentsController < ApplicationController
       .by_expiration_date_start(filter_params[:expiration_date_start])
       .by_expiration_date_end(filter_params[:expiration_date_end])
       .by_patient_id(filter_params[:patient_id])
+      .order(order_by)
       .allowed
 
     total = payments.count
@@ -91,5 +92,20 @@ class PaymentsController < ApplicationController
         :payment_method,
         :service_id
       ).to_h.symbolize_keys
+  end
+
+  def order_by
+    case params[:order_by]
+    when "expiration_date_asc"
+      { expiration_date: :asc }
+    when "expiration_date_desc"
+      { expiration_date: :desc }
+    when "payment_date_asc"
+      { payment_date: :asc }
+    when "payment_date_desc"
+      { payment_date: :desc }
+    else
+      { expiration_date: :desc }
+    end
   end
 end

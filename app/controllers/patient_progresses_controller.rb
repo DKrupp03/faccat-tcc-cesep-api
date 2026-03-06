@@ -7,6 +7,7 @@ class PatientProgressesController < ApplicationController
 	def index
     progresses = @profile.patient_progresses.by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
+      .order(order_by)
       .allowed
 
     total = progresses.count
@@ -93,5 +94,16 @@ class PatientProgressesController < ApplicationController
         :observations,
         :service_id
       ).to_h.symbolize_keys
+  end
+
+  def order_by
+    case params[:order_by]
+    when "date_start_asc"
+      { date_start: :asc }
+    when "date_start_desc"
+      { date_start: :desc }
+    else
+      { date_start: :desc }
+    end
   end
 end

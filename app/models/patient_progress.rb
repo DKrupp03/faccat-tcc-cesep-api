@@ -1,5 +1,6 @@
 class PatientProgress < ApplicationRecord
   belongs_to(:service)
+  has_many_attached(:attachments)
 
   validates(:title, presence: true)
   validates(:date, presence: true)
@@ -8,6 +9,7 @@ class PatientProgress < ApplicationRecord
 
   def show
     progress = self.attributes
+    progress.store(:attachment_urls, self.attachments.map { |a| rails_blob_url(a) })
     progress.store(:service, self.service)
     progress
   end

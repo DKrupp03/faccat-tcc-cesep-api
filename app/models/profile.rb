@@ -1,5 +1,6 @@
 class Profile < ApplicationRecord
   has_one(:user, dependent: :destroy)
+  has_one_attached(:photo)
 
   belongs_to(:therapist, class_name: "Profile", optional: true)
   has_many(:patients, class_name: "Profile", foreign_key: :therapist_id)
@@ -32,6 +33,7 @@ class Profile < ApplicationRecord
 
   def show
     profile = self.attributes
+    profile.store(:photo_url, rails_blob_url(self.photo)) if self.photo.attached?
     profile.store(:user, self.user)
 
     if self.therapist?

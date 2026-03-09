@@ -92,7 +92,8 @@ class PatientProgressesController < ApplicationController
         :title,
         :date,
         :observations,
-        :service_id
+        :service_id,
+        attachments: []
       ).to_h.symbolize_keys
   end
 

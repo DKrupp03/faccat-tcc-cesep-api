@@ -1,5 +1,6 @@
 class Payment < ApplicationRecord
   belongs_to(:service)
+  has_many_attached(:attachments)
 
   validates(:value, presence: true, numericality: { greater_than_or_equal_to: 0 })
   validates(:expiration_date, presence: true)
@@ -16,6 +17,7 @@ class Payment < ApplicationRecord
 
   def show
     payment = self.attributes
+    payment.store(:attachment_urls, self.attachments.map { |a| rails_blob_url(a) })
     payment.store(:service, self.service)
     payment.store(:status, self.status)
     payment

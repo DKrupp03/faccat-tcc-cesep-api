@@ -90,7 +90,8 @@ class PaymentsController < ApplicationController
         :expiration_date,
         :payment_date,
         :payment_method,
-        :service_id
+        :service_id,
+        attachments: []
       ).to_h.symbolize_keys
   end
 

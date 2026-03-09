@@ -92,7 +92,8 @@ class ProfilesController < ApplicationController
         :extra,
         :role,
         :active,
-        :therapist_id
+        :therapist_id,
+        :photo
       ).to_h.symbolize_keys
   end
 

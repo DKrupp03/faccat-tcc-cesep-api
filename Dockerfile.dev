@@ -1,9 +1,10 @@
-FROM ruby:3.4
+FROM ruby:3.4-alpine
 
-RUN apt-get update -qq && apt-get install -y \
-  build-essential \
-  libpq-dev \
-  nodejs \
+RUN apk add --no-cache \
+  build-base \
+  postgresql-dev \
+  yaml-dev \
+  tzdata \
   git
 
 WORKDIR /app
@@ -15,4 +16,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["bash", "-c", "bundle exec rails s -b 0.0.0.0"]
+CMD ["sh", "-c", "bundle exec rails s -b 0.0.0.0"]

@@ -13,7 +13,7 @@ class Profile < ApplicationRecord
 
   has_many(:medical_records, through: :patient_services, source: :medical_record)
 
-  validates(:name, presence: true, uniqueness: { case_sensitive: true }, length: { minimum: 3 })
+  validates(:name, presence: true, length: { minimum: 3 })
   validates(:gender, presence: true)
   validates(:birth, presence: true, comparison: { less_than: -> { Date.current } })
   validates(
@@ -73,11 +73,13 @@ class Profile < ApplicationRecord
 
   def self.allowed(profile = User.current.profile)
     return where("id = :id OR therapist_id = :id", id: profile.id) if profile.therapist?
+    return where(id: profile.id) if profile.patient?
     return all
   end
 
   def allowed?(profile = User.current.profile)
     return self.id == profile.id || self.therapist_id == profile.id if profile.therapist?
+    return self.id == profile.id if profile.patient?
     return true
   end
 end

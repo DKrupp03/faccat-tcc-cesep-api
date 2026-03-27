@@ -1,6 +1,6 @@
 class CreateProfiles < ActiveRecord::Migration[8.1]
   def change
-    create_table :profiles do |t|
+    create_table(:profiles) do |t|
       t.string(:name, null: false)
       t.integer(:gender, null: false)
       t.date(:birth, null: false)

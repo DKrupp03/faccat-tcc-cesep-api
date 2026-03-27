@@ -5,7 +5,9 @@ class MedicalRecordsController < ApplicationController
   before_action(:check_permissions)
 
 	def index
-    records = @profile.medical_records.by_date_start(filter_params[:date_start])
+    records = @profile.medical_records.includes(:service)
+      .with_attached_attachments
+      .by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
       .order(order_by)
       .allowed

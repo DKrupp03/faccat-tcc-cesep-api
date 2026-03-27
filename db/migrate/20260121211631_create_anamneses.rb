@@ -1,6 +1,6 @@
 class CreateAnamneses < ActiveRecord::Migration[8.1]
   def change
-    create_table :anamneses do |t|
+    create_table(:anamneses) do |t|
       t.integer(:anamnese_type, null: false)
       t.jsonb(:anamnese_data, null: false, default: {})
       t.text(:observations, default: nil)

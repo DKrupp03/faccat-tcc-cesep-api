@@ -57,14 +57,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_225844) do
     t.index ["therapist_id"], name: "index_anamneses_on_therapist_id"
   end
 
-  create_table "patient_progresses", force: :cascade do |t|
+  create_table "medical_records", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "date", null: false
     t.text "observations", null: false
     t.integer "service_id", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["service_id"], name: "index_patient_progresses_on_service_id"
+    t.index ["service_id"], name: "index_medical_records_on_service_id"
   end
 
   create_table "payments", force: :cascade do |t|
@@ -145,7 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_225844) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "anamneses", "profiles", column: "patient_id"
   add_foreign_key "anamneses", "profiles", column: "therapist_id"
-  add_foreign_key "patient_progresses", "services"
+  add_foreign_key "medical_records", "services"
   add_foreign_key "payments", "services"
   add_foreign_key "profiles", "profiles", column: "therapist_id"
   add_foreign_key "services", "profiles", column: "patient_id"

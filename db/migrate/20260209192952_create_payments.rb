@@ -1,6 +1,6 @@
 class CreatePayments < ActiveRecord::Migration[8.1]
   def change
-    create_table :payments do |t|
+    create_table(:payments) do |t|
       t.decimal(:value, precision: 10, scale: 2, null: false)
       t.date(:expiration_date, null: false)
       t.date(:payment_date)

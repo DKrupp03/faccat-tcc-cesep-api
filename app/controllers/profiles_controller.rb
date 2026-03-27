@@ -4,7 +4,10 @@ class ProfilesController < ApplicationController
   before_action(:check_permissions, except: [:index])
 
 	def index
-    profiles = Profile.by_name(filter_params[:name])
+    profiles = Profile.includes(:user, :patients, :patient_anamnese, :patient_services,
+        :therapist, :therapist_anamneses, :therapist_services)
+      .with_attached_photo
+      .by_name(filter_params[:name])
       .by_therapist_id(filter_params[:therapist_id])
       .by_active(filter_params[:active])
       .by_role(filter_params[:role])
@@ -87,7 +90,7 @@ class ProfilesController < ApplicationController
         :cpf,
         :rg,
         :crp,
-        :parent,
+        parent: {},
         :default_value,
         :extra,
         :role,

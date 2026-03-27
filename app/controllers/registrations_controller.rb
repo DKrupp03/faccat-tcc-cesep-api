@@ -2,18 +2,23 @@ class RegistrationsController < Devise::RegistrationsController
   respond_to(:json)
 
   def create
-    profile = Profile.new(profile_params)
+    ActiveRecord::Base.transaction do
+      profile = Profile.new(profile_params)
+      profile.save!
 
-    unless profile.save
-      render_json_errors(profile.errors.full_messages) and return
+      build_resource(sign_up_params.merge(profile_id: profile.id))
+      resource.save!
     end
-
-    build_resource(sign_up_params.merge(profile_id: profile.id))
-    resource.save
 
     yield resource if block_given?
 
     respond_with(resource, location: after_sign_up_path_for(resource))
+  rescue ActiveRecord::RecordInvalid => e
+    if resource&.errors&.any?
+      render_json_errors(resource.errors.full_messages)
+    else
+      render_json_errors(e.record.errors.full_messages)
+    end
   end
 
   protected

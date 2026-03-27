@@ -1,10 +1,12 @@
 class PaymentsController < ApplicationController
   before_action(:authenticate_user!)
   before_action(:set_payment, only: [:show, :update, :destroy])
-  before_action(:check_permissions, except: [:index, :create])
+  before_action(:check_permissions, except: [:index])
 
 	def index
-    payments = Payment.by_status(filter_params[:status])
+    payments = Payment.includes(:service)
+      .with_attached_attachments
+      .by_status(filter_params[:status])
       .by_payment_date_start(filter_params[:payment_date_start])
       .by_payment_date_end(filter_params[:payment_date_end])
       .by_expiration_date_start(filter_params[:expiration_date_start])
@@ -59,6 +61,13 @@ class PaymentsController < ApplicationController
 
   def check_permissions
     case params[:action]
+    when "create"
+      current_profile = User.current.profile
+      return render_not_allowed() unless current_profile.admin? || current_profile.therapist?
+      if current_profile.therapist?
+        service = Service.find_by_id(params.dig(:payment, :service_id))
+        return render_not_allowed() if service.nil? || service.therapist_id != current_profile.id
+      end
     when "update", "destroy", "show"
       return render_not_allowed() if !@payment.allowed?
     end

@@ -40,7 +40,7 @@ Rails 8.1 **API-only** app (no views) for a psychology clinic management system.
 - **Profile** — core entity. Has three roles: `admin`, `therapist`, `patient`. Therapists have many patient Profiles. Carries personal data (CPF, CRP, etc.) and a profile photo (Active Storage).
 - **User** — Devise + JWT authentication, one-to-one with Profile.
 - **Service** — a therapy session/appointment, belongs to therapist and patient Profiles.
-- **PatientProgress** — session notes (belongs to Service, has file attachments).
+- **MedicalRecord** — session notes (belongs to Service, has file attachments).
 - **Payment** — billing for a Service (computed status: paid/unpaid/overdue, has file attachments).
 - **Anamnese** — patient intake/history (JSONB data), belongs to therapist + patient Profiles.
 
@@ -63,7 +63,7 @@ Rails 8.1 **API-only** app (no views) for a psychology clinic management system.
 - `order_by` — translates string param (e.g. `"name_asc"`) to ActiveRecord hash.
 - Strong params end with `.to_h.symbolize_keys`.
 
-**File uploads:** Active Storage, local disk storage. Profile has `has_one_attached :photo`; Payment and PatientProgress have `has_many_attached :attachments`. URLs are generated with `rails_blob_url` — host is set per-request in `ApplicationController#set_url_options`.
+**File uploads:** Active Storage, local disk storage. Profile has `has_one_attached :photo`; Payment and MedicalRecord have `has_many_attached :attachments`. URLs are generated with `rails_blob_url` — host is set per-request in `ApplicationController#set_url_options`.
 
 **Pagination:** Kaminari, default 30/page. Pass `page` and `per_page` params.
 

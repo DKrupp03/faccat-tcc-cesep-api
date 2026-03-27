@@ -1,54 +1,54 @@
-class PatientProgressesController < ApplicationController
+class MedicalRecordsController < ApplicationController
   before_action(:authenticate_user!)
   before_action(:set_profile)
-  before_action(:set_progress, only: [:show, :update, :destroy])
+  before_action(:set_record, only: [:show, :update, :destroy])
   before_action(:check_permissions)
 
 	def index
-    progresses = @profile.patient_progresses.by_date_start(filter_params[:date_start])
+    records = @profile.medical_records.by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
       .order(order_by)
       .allowed
 
-    total = progresses.count
+    total = records.count
 
     if params[:page].present?
-      progresses = progresses.page(params[:page]).per(params[:per_page] || 30)
+      records = records.page(params[:page]).per(params[:per_page] || 30)
     end
 
 		render_json_success({
-      progresses: progresses.map(&:show),
+      medical_records: records.map(&:show),
       total: total
     })
 	end
 
   def show
-    render_json_success({ progress: @progress.show })
+    render_json_success({ medical_record: @record.show })
   end
 
   def create
-    @progress = @profile.patient_progresses.new(progress_params)
+    @record = @profile.medical_records.new(record_params)
 
-    if @progress.save
-      render_json_success({ progress: @progress.show })
+    if @record.save
+      render_json_success({ medical_record: @record.show })
     else
-      render_json_errors(@progress.errors)
+      render_json_errors(@record.errors)
     end
   end
 
   def update
-     if @progress.update(progress_params)
-      render_json_success({ progress: @progress.show })
+     if @record.update(record_params)
+      render_json_success({ medical_record: @record.show })
     else
-      render_json_errors(@progress.errors)
+      render_json_errors(@record.errors)
     end
   end
 
   def destroy
-    if @progress.destroy
-      render_json_success({ progress: @progress.show })
+    if @record.destroy
+      render_json_success({ medical_record: @record.show })
     else
-      render_json_errors(@progress.errors)
+      render_json_errors(@record.errors)
     end
   end
 
@@ -61,7 +61,7 @@ class PatientProgressesController < ApplicationController
         return render_not_allowed()
       end
     when "update", "destroy", "show"
-      return render_not_allowed() if !@progress.allowed?
+      return render_not_allowed() if !@record.allowed?
     end
   end
 
@@ -71,23 +71,23 @@ class PatientProgressesController < ApplicationController
     return render_not_found(Profile) if @profile.nil?
   end
 
-  def set_progress
-    @progress = @profile.patient_progresses.find_by_id(params[:id])
+  def set_record
+    @record = @profile.medical_records.find_by_id(params[:id])
 
-    return render_not_found(PatientProgress) if @progress.nil?
+    return render_not_found(MedicalRecord) if @record.nil?
   end
 
   def filter_params
-    return {} unless params[:progresses].present?
+    return {} unless params[:records].present?
 
-    params.permit(progresses: [
+    params.permit(records: [
       :date_start,
       :date_end
-    ])[:progresses].to_h.symbolize_keys
+    ])[:records].to_h.symbolize_keys
   end
 
-  def progress_params
-    params.require(:progress)
+  def record_params
+    params.require(:medical_record)
       .permit(
         :title,
         :date,

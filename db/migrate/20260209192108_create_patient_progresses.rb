@@ -1,6 +1,6 @@
-class CreatePatientProgresses < ActiveRecord::Migration[8.1]
+class CreateMedicalRecords < ActiveRecord::Migration[8.1]
   def change
-    create_table :patient_progresses do |t|
+    create_table :medical_records do |t|
       t.string(:title, null: false)
       t.date(:date, null: false)
       t.text(:observations, null: false)

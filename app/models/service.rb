@@ -1,7 +1,7 @@
 class Service < ApplicationRecord
   belongs_to(:patient, class_name: "Profile")
   belongs_to(:therapist, class_name: "Profile")
-  has_one(:patient_progress, dependent: :destroy)
+  has_one(:medical_record, dependent: :destroy)
   has_one(:payment, dependent: :destroy)
 
   validates(
@@ -34,7 +34,7 @@ class Service < ApplicationRecord
     service = self.attributes
     service.store(:patient, self.patient)
     service.store(:therapist, self.therapist)
-    service.store(:patient_progress, self.patient_progress)
+    service.store(:medical_record, self.medical_record)
     service.store(:payment, self.payment)
     service
   end

@@ -11,7 +11,7 @@ class Profile < ApplicationRecord
   has_many(:therapist_services, class_name: "Service", foreign_key: :therapist_id, dependent: :nullify)
   has_many(:patient_services, class_name: "Service", foreign_key: :patient_id, dependent: :destroy)
 
-  has_many(:patient_progresses, through: :patient_services, source: :patient_progress)
+  has_many(:medical_records, through: :patient_services, source: :medical_record)
 
   validates(:name, presence: true, uniqueness: { case_sensitive: true }, length: { minimum: 3 })
   validates(:gender, presence: true)

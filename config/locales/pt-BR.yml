@@ -10,9 +10,9 @@ pt-BR:
       payment:
         one: "Pagamento"
         other: "Pagamentos"
-      patient_progress:
-        one: "Progresso do paciente"
-        other: "Progressos do paciente"
+      medical_record:
+        one: "Prontuário"
+        other: "Prontuários"
       anamnese:
         one: "Anamnese"
         other: "Anamneses"
@@ -44,7 +44,7 @@ pt-BR:
               greater_than_or_equal_to: "Deve ser maior que a data atual!"
             service:
               taken: "Já existe um pagamento associado a este serviço!"
-        patient_progress:
+        medical_record:
           attributes:
             service:
               taken: "Já existe um pagamento associado a este serviço!"

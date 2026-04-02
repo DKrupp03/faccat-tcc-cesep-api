@@ -19,6 +19,7 @@ pt-BR:
     errors:
       messages:
         blank: "É Necessário preencher este campo!"
+        no_active_session: "Não foi possível encontrar uma sessão ativa!"
         required: "É Necessário preencher este campo!"
         too_short: "É muito curto (mínimo %{count} caracteres)!"
         too_long: "É muito longo (máximo %{count} caracteres)!"

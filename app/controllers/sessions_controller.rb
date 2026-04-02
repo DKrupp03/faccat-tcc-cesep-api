@@ -11,7 +11,10 @@ class SessionsController < Devise::SessionsController
     if resource
       render_json_success()
     else
-      render_json_errors("Não foi possível encontrar uma sessão ativa!", status: :unauthorized)
+      render_json_errors(
+        I18n.t("activerecord.errors.messages.no_active_session"),
+        status: :unauthorized
+      )
     end
   end
 end

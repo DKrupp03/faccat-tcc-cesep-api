@@ -14,16 +14,13 @@ class ApplicationController < ActionController::API
     Rails.application.routes.default_url_options[:host] = host
   end
   
-  def render_json_success(response = {})
+  def render_json_success(response = {}, status: :ok)
     response[:success] = true
-    render(json: response)
+    render(json: response, status: status)
   end
 
-  def render_json_errors(errors)
-    render(json: {
-      success: false,
-      errors: errors
-    })
+  def render_json_errors(errors, status: :unprocessable_entity)
+    render(json: { success: false, errors: errors }, status: status)
   end
 
   def render_not_allowed

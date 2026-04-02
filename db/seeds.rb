@@ -101,7 +101,7 @@ progress_observations = [
     service: service
   )
 
-  PatientProgress.create!(
+  MedicalRecord.create!(
     title: progress_titles.sample,
     date: start_time.to_date,
     observations: progress_observations.sample,

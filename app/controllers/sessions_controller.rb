@@ -4,23 +4,14 @@ class SessionsController < Devise::SessionsController
   private
 
   def respond_with(resource, _opts = {})
-    render(json: {
-      user: {
-        id: resource.id,
-        email: resource.email
-      }
-    }, status: :ok)
+    render_json_success({ user: { id: resource.id, email: resource.email } })
   end
 
   def respond_to_on_destroy(resource)
     if resource
-      render(json: {
-        message: "Deslogado com sucesso!",
-      }, status: :ok)
+      render_json_success()
     else
-      render(json: {
-        message: "Não foi possível encontrar uma sessão ativa!",
-      }, status: :unauthorized)
+      render_json_errors("Não foi possível encontrar uma sessão ativa!", status: :unauthorized)
     end
   end
 end

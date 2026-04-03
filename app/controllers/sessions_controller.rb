@@ -4,7 +4,13 @@ class SessionsController < Devise::SessionsController
   private
 
   def respond_with(resource, _opts = {})
-    render_json_success({ user: { id: resource.id, email: resource.email } })
+    render_json_success({
+      user: {
+        id: resource.id,
+        email: resource.email,
+        profile_id: resource.profile_id
+      },
+    })
   end
 
   def respond_to_on_destroy(resource)

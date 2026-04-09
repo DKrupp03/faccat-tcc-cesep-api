@@ -19,6 +19,11 @@ pt-BR:
         subject: "Instruções de confirmação"
       reset_password_instructions:
         subject: "Instruções para redefinir sua senha"
+        greeting: "Olá, %{name}!"
+        message: "Alguém solicitou um link para alterar sua senha. Você pode fazer isso através do link abaixo."
+        link: "Redefinir minha senha"
+        ignore: "Se você não solicitou isso, ignore este e-mail."
+        note: "Sua senha não será alterada até que você acesse o link acima e crie uma nova."
       unlock_instructions:
         subject: "Instruções para desbloquear sua conta"
       email_changed:

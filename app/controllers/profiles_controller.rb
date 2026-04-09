@@ -90,13 +90,13 @@ class ProfilesController < ApplicationController
         :cpf,
         :rg,
         :crp,
-        parent: {},
         :default_value,
         :extra,
         :role,
         :active,
         :therapist_id,
-        :photo
+        :photo,
+        parent: {},
       ).to_h.symbolize_keys
   end
 

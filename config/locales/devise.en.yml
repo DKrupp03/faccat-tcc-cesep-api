@@ -21,6 +21,11 @@ en:
         subject: "Confirmation instructions"
       reset_password_instructions:
         subject: "Reset password instructions"
+        greeting: "Hello, %{name}!"
+        message: "Someone requested a link to change your password. You can do this through the link below."
+        link: "Reset my password"
+        ignore: "If you didn't request this, please ignore this email."
+        note: "Your password won't change until you access the link above and create a new one."
       unlock_instructions:
         subject: "Unlock instructions"
       email_changed:

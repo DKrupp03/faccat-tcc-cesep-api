@@ -5,13 +5,9 @@ class PasswordsController < Devise::PasswordsController
     self.resource = resource_class.send_reset_password_instructions(resource_params)
 
     if successfully_sent?(resource)
-      render(json: {
-				message: "Email de recuperação enviado com sucesso."
-			}, status: :ok)
+      render_json_success()
     else
-      render(json: {
-				errors: resource.errors.full_messages
-			}, status: :unprocessable_entity)
+      render_json_errors(resource.errors.map(&:message))
     end
   end
 
@@ -19,13 +15,9 @@ class PasswordsController < Devise::PasswordsController
     self.resource = resource_class.reset_password_by_token(resource_params)
 
     if resource.errors.empty?
-      render(json: {
-				message: "Senha alterada com sucesso."
-			}, status: :ok)
+      render_json_success()
     else
-      render(json: {
-				errors: resource.errors.full_messages
-			}, status: :unprocessable_entity)
+      render_json_errors(resource.errors.map(&:message))
     end
   end
 

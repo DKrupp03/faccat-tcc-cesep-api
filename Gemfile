@@ -56,6 +56,6 @@ group :development, :test do
   gem "pry-rails"
 end
 
-gem "letter_opener", "~> 1.10"
+gem "letter_opener_web", "~> 2.0"
 
 gem "kaminari"

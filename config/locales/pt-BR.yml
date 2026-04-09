@@ -27,6 +27,14 @@ pt-BR:
         not_found: "%{model} não encontrado!"
         not_allowed: "Acesso não permitido!"
       models:
+        user:
+          attributes:
+            email:
+              not_found: "Não há usuário com este e-mail!"
+            reset_password_token:
+              invalid: "Token de redefinição de senha inválido ou já utilizado!"
+            password_confirmation:
+              confirmation: "Confirmação não coincide com a senha!"
         profile:
           attributes:
             name:

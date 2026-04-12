@@ -1,15 +1,12 @@
-timestamp = Time.now.to_i
-p "timestamp: #{timestamp}"
-
 admin_profile = Profile.create!(
-  name: "Admin #{timestamp}",
+  name: "Admin",
   gender: :male,
   birth: Date.new(2003, 4, 28),
   role: :admin
 )
 
 admin_user = User.new(
-  email: "admin_#{timestamp}@example.com",
+  email: "admin@example.com",
   password: "Admin123",
   password_confirmation: "Admin123",
   profile: admin_profile
@@ -18,14 +15,14 @@ admin_user.skip_confirmation!
 admin_user.save!
 
 therapist_profile = Profile.create!(
-  name: "Terapeuta #{timestamp}",
+  name: "Terapeuta",
   gender: :female,
   birth: Date.new(1985, 1, 1),
   role: :therapist
 )
 
 therapist_user = User.new(
-  email: "therapist_#{timestamp}@example.com",
+  email: "therapist@example.com",
   password: "Therapist123",
   password_confirmation: "Therapist123",
   profile: therapist_profile
@@ -34,7 +31,7 @@ therapist_user.skip_confirmation!
 therapist_user.save!
 
 patient_profile = Profile.create!(
-  name: "Paciente #{timestamp}",
+  name: "Paciente",
   gender: :female,
   birth: Date.new(1985, 1, 1),
   role: :patient,
@@ -42,7 +39,7 @@ patient_profile = Profile.create!(
 )
 
 patient_user = User.new(
-  email: "patient_#{timestamp}@example.com",
+  email: "patient@example.com",
   password: "Patient123",
   password_confirmation: "Patient123",
   profile: patient_profile

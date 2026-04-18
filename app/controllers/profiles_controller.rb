@@ -4,17 +4,18 @@ class ProfilesController < ApplicationController
   before_action(:check_permissions, except: [:index])
 
 	def index
+    profiles = Profile.by_role(filter_params[:role])
+    total = profiles.count
+
     profiles = Profile.includes(:user, :patients, :patient_anamnese, :patient_services,
         :therapist, :therapist_anamneses, :therapist_services)
       .with_attached_photo
       .by_name(filter_params[:name])
       .by_therapist_id(filter_params[:therapist_id])
       .by_active(filter_params[:active])
-      .by_role(filter_params[:role])
       .order(order_by)
       .allowed
-
-    total = profiles.count
+    total_filtered = profiles.count
 
     if params[:page].present?
       profiles = profiles.page(params[:page]).per(params[:per_page] || 30)
@@ -22,7 +23,8 @@ class ProfilesController < ApplicationController
 
 		render_json_success({
       profiles: profiles.map(&:show),
-      total: total
+      total_filtered: total_filtered,
+      total: total,
     })
 	end
 

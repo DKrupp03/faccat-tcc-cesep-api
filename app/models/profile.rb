@@ -31,24 +31,40 @@ class Profile < ApplicationRecord
     postgraduate: 7, masters: 8, doctorate: 9 })
   enum(:role, { admin: 0, therapist: 1, patient: 2 })
 
-  def show
+  def show(list_attributes: false)
     profile = self.attributes
     profile.store(:photo_url, rails_blob_url(self.photo)) if self.photo.attached?
     profile.store(:user, self.user)
 
-    if self.therapist?
-      profile.store(:patients, self.patients)
-      profile.store(:patient_anamnese, self.patient_anamnese)
-      profile.store(:patient_services, self.patient_services)
-    end
+    if list_attributes
+      profile.store(:patients_count, self.patients.count) if self.therapist?
+      profile.store(:therapist, self.therapist) if self.patient?
 
-    if self.patient?
-      profile.store(:therapist, self.therapist)
-      profile.store(:therapist_anamneses, self.therapist_anamneses)
-      profile.store(:therapist_services, self.therapist_services)
+      profile.store(:services_count, self.services.count)
+      profile.store(:last_service, self.last_service&.datetime_start)
+      profile.store(:payment_status, self.payment_status)
+    else
+      profile.store(:patients, self.patients) if self.therapist?
+      profile.store(:services, self.services)
     end
 
     return profile
+  end
+
+  def services
+    if self.therapist?
+      self.therapist_services
+    else
+      self.patient_services
+    end
+  end
+
+  def last_service
+    self.services.order(datetime_start: :desc).first
+  end
+
+  def payment_status
+    self.last_service&.payment&.status
   end
 
   def self.by_role(role)

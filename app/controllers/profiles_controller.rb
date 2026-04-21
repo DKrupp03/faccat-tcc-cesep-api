@@ -7,11 +7,14 @@ class ProfilesController < ApplicationController
     profiles = Profile.by_role(filter_params[:role])
     total = profiles.count
 
+    total_active = profiles.by_active(true).count
+
     profiles = profiles.includes(:user, :patients, :patient_anamnese, :patient_services,
         :therapist, :therapist_anamneses, :therapist_services)
       .with_attached_photo
       .by_name(filter_params[:name])
       .by_therapist_id(filter_params[:therapist_id])
+      .by_patient_id(filter_params[:patient_id])
       .by_active(filter_params[:active])
       .order(order_by)
       .allowed
@@ -25,6 +28,7 @@ class ProfilesController < ApplicationController
       profiles: profiles.map { |p| p.show(list_attributes: true) },
       total_filtered: total_filtered,
       total: total,
+      total_active: total_active,
     })
 	end
 
@@ -97,6 +101,7 @@ class ProfilesController < ApplicationController
         :role,
         :active,
         :therapist_id,
+        :patient_id,
         :photo,
         parent: {},
       ).to_h.symbolize_keys

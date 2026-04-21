@@ -83,7 +83,7 @@ class Profile < ApplicationRecord
   end
 
   def self.by_patient_id(patient_id)
-    return where(patient_id: patient_id, role: :patient) if patient_id.present?
+    return joins(:patients).where(patients: { id: patient_id }) if patient_id.present?
     return all
   end
 

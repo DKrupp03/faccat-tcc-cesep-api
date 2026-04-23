@@ -13,11 +13,17 @@ class ProfilesController < ApplicationController
         :therapist, :therapist_anamneses, :therapist_services)
       .with_attached_photo
       .by_name(filter_params[:name])
-      .by_therapist_id(filter_params[:therapist_id])
-      .by_patient_id(filter_params[:patient_id])
       .by_active(filter_params[:active])
       .order(order_by)
       .allowed
+
+    if filter_params[:role] == "patient"
+      profiles = profiles.by_therapist_id(filter_params[:therapist_id])
+        .by_payment_status(filter_params[:payment_status])
+    elsif filter_params[:role] == "therapist"
+      profiles = profiles.by_patient_id(filter_params[:patient_id])
+    end
+
     total_filtered = profiles.count
 
     if params[:page].present?
@@ -79,7 +85,8 @@ class ProfilesController < ApplicationController
       :therapist_id,
       :patient_id,
       :active,
-      :role
+      :role,
+      :payment_status
     ])[:profiles].to_h.symbolize_keys
   end
 

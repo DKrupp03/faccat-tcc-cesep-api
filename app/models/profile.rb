@@ -87,6 +87,32 @@ class Profile < ApplicationRecord
     return all
   end
 
+  def self.by_payment_status(payment_status)
+    return all if payment_status.blank?
+
+    last_services = Service
+      .select("DISTINCT ON (patient_id) patient_id, id AS service_id")
+      .order("patient_id, datetime_start DESC")
+
+    joined = joins("JOIN (#{last_services.to_sql}) last_svc ON last_svc.patient_id = profiles.id")
+             .joins("JOIN payments ON payments.service_id = last_svc.service_id")
+
+    case payment_status.to_sym
+    when :paid
+      joined.where.not(payments: { payment_date: nil })
+    when :overdue
+      joined
+        .where(payments: { payment_date: nil })
+        .where("payments.expiration_date < ?", Date.current)
+    when :unpaid
+      joined
+        .where(payments: { payment_date: nil })
+        .where("payments.expiration_date >= ?", Date.current)
+    else
+      all
+    end
+  end
+
   def self.allowed(profile = User.current.profile)
     return where("id = :id OR therapist_id = :id", id: profile.id) if profile.therapist?
     return where(id: profile.id) if profile.patient?

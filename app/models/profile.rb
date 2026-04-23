@@ -73,7 +73,7 @@ class Profile < ApplicationRecord
   end
 
   def self.by_active(active)
-    return where(active: active) if active.present?
+    return where(active: active) if active.to_i >= 0
     return all
   end
 

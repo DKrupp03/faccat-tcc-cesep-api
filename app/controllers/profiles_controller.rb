@@ -7,7 +7,7 @@ class ProfilesController < ApplicationController
     profiles = Profile.by_role(filter_params[:role])
     total = profiles.count
 
-    total_active = profiles.by_active(true).count
+    total_active = profiles.by_active(1).count
 
     profiles = profiles.includes(:user, :patients, :patient_anamnese, :patient_services,
         :therapist, :therapist_anamneses, :therapist_services)
@@ -77,6 +77,7 @@ class ProfilesController < ApplicationController
     params.permit(profiles: [
       :name,
       :therapist_id,
+      :patient_id,
       :active,
       :role
     ])[:profiles].to_h.symbolize_keys

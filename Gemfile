@@ -54,6 +54,8 @@ group :development, :test do
 
   gem "pry"
   gem "pry-rails"
+
+  gem "faker"
 end
 
 gem "letter_opener_web", "~> 2.0"

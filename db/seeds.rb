@@ -1,3 +1,9 @@
+require "faker"
+
+Faker::Config.locale = :en
+
+# ─── Admin ─────────────────────────────────────────────────────────────────────
+
 admin_profile = Profile.create!(
   name: "Admin",
   gender: :male,
@@ -16,77 +22,49 @@ admin_user.save!
 
 # ─── Terapeutas ────────────────────────────────────────────────────────────────
 
-therapists_data = [
-  { name: "Ana Souza",       gender: :female, birth: Date.new(1978, 3, 12), email: "ana.souza@example.com",       password: "Therapist123" },
-  { name: "Carlos Mendes",   gender: :male,   birth: Date.new(1982, 7, 22), email: "carlos.mendes@example.com",   password: "Therapist123" },
-  { name: "Fernanda Lima",   gender: :female, birth: Date.new(1990, 11, 5), email: "fernanda.lima@example.com",   password: "Therapist123" },
-  { name: "Ricardo Alves",   gender: :male,   birth: Date.new(1975, 1, 30), email: "ricardo.alves@example.com",   password: "Therapist123" },
-  { name: "Mariana Costa",   gender: :female, birth: Date.new(1988, 9, 18), email: "mariana.costa@example.com",   password: "Therapist123" },
-]
-
-therapist_profiles = therapists_data.map do |data|
+therapist_profiles = 20.times.map do |i|
+  gender  = %i[male female].sample
+  name    = gender == :female ? Faker::Name.feminine_name : Faker::Name.masculine_name
   profile = Profile.create!(
-    name: data[:name],
-    gender: data[:gender],
-    birth: data[:birth],
-    role: :therapist
+    name:   name,
+    gender: gender,
+    birth:  Faker::Date.birthday(min_age: 28, max_age: 60),
+    role:   :therapist
   )
   user = User.new(
-    email: data[:email],
-    password: data[:password],
-    password_confirmation: data[:password],
-    profile: profile
+    email:                 "terapeuta#{i + 1}@example.com",
+    password:              "Therapist123",
+    password_confirmation: "Therapist123",
+    profile:               profile
   )
   user.skip_confirmation!
   user.save!
   profile
 end
-
-# keep the canonical "therapist@example.com" alias pointing to the first therapist
-therapist_profile = therapist_profiles.first
 
 # ─── Pacientes ─────────────────────────────────────────────────────────────────
 
-patients_data = [
-  { name: "Julia Ferreira",   gender: :female, birth: Date.new(1995, 4, 10), email: "julia.ferreira@example.com" },
-  { name: "Pedro Oliveira",   gender: :male,   birth: Date.new(1988, 8, 25), email: "pedro.oliveira@example.com" },
-  { name: "Camila Santos",    gender: :female, birth: Date.new(2000, 12, 3), email: "camila.santos@example.com"  },
-  { name: "Lucas Pereira",    gender: :male,   birth: Date.new(1993, 6, 17), email: "lucas.pereira@example.com"  },
-  { name: "Beatriz Rocha",    gender: :female, birth: Date.new(1997, 2, 28), email: "beatriz.rocha@example.com"  },
-  { name: "Gabriel Torres",   gender: :male,   birth: Date.new(1985, 10, 9), email: "gabriel.torres@example.com" },
-  { name: "Isabela Nunes",    gender: :female, birth: Date.new(2002, 7, 14), email: "isabela.nunes@example.com"  },
-  { name: "Thiago Barbosa",   gender: :male,   birth: Date.new(1991, 3, 21), email: "thiago.barbosa@example.com" },
-  { name: "Larissa Gomes",    gender: :female, birth: Date.new(1999, 5, 7),  email: "larissa.gomes@example.com"  },
-  { name: "Mateus Cardoso",   gender: :male,   birth: Date.new(1987, 11, 30),email: "mateus.cardoso@example.com" },
-  { name: "Amanda Ribeiro",   gender: :female, birth: Date.new(1994, 9, 2),  email: "amanda.ribeiro@example.com" },
-  { name: "Felipe Martins",   gender: :male,   birth: Date.new(1996, 1, 19), email: "felipe.martins@example.com" },
-  { name: "Natalia Dias",     gender: :female, birth: Date.new(2001, 6, 11), email: "natalia.dias@example.com"   },
-  { name: "Bruno Carvalho",   gender: :male,   birth: Date.new(1983, 8, 4),  email: "bruno.carvalho@example.com" },
-  { name: "Priscila Moreira", gender: :female, birth: Date.new(1998, 3, 26), email: "priscila.moreira@example.com" },
-]
-
-patient_profiles = patients_data.each_with_index.map do |data, i|
-  therapist = therapist_profiles[i % therapist_profiles.size]
-  profile = Profile.create!(
-    name: data[:name],
-    gender: data[:gender],
-    birth: data[:birth],
-    role: :patient,
+patient_profiles = 100.times.map do |i|
+  gender    = %i[male female].sample
+  name      = gender == :female ? Faker::Name.feminine_name : Faker::Name.masculine_name
+  therapist = therapist_profiles.sample
+  profile   = Profile.create!(
+    name:      name,
+    gender:    gender,
+    birth:     Faker::Date.birthday(min_age: 18, max_age: 70),
+    role:      :patient,
     therapist: therapist
   )
   user = User.new(
-    email: data[:email],
-    password: "Patient123",
+    email:                 "paciente#{i + 1}@example.com",
+    password:              "Patient123",
     password_confirmation: "Patient123",
-    profile: profile
+    profile:               profile
   )
   user.skip_confirmation!
   user.save!
   profile
 end
-
-# keep the canonical "patient@example.com" alias
-patient_profile = patient_profiles.first
 
 # ─── Conteúdo de sessões ───────────────────────────────────────────────────────
 
@@ -144,7 +122,7 @@ progress_observations = [
 patient_profiles.each do |patient|
   therapist = patient.therapist
 
-  rand(8..20).times do
+  rand(0..20).times do
     offset_days = rand(-180..90)
     start_time  = Time.current + offset_days.days + rand(8..17).hours + [0, 30].sample.minutes
     end_time    = start_time + [45, 60, 90].sample.minutes
@@ -172,7 +150,7 @@ patient_profiles.each do |patient|
     expiration   = start_time.to_date + rand(1..15).days
 
     payment = Payment.new(
-      value:           rand(100.0..300.0).round(2),
+      value:           Faker::Commerce.price(range: 100.0..300.0),
       expiration_date: expiration,
       payment_date:    paid_session ? expiration - rand(0..5).days : nil,
       payment_method:  Payment.payment_methods.keys.sample,

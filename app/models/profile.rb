@@ -67,6 +67,11 @@ class Profile < ApplicationRecord
     self.last_service&.payment&.status
   end
 
+  def self.by_name(name)
+    return where("name ILIKE ?", "%#{name}%") if name.present?
+    return all
+  end
+
   def self.by_role(role)
     return where(role: role) if role.present?
     return all

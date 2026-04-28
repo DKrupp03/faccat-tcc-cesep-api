@@ -87,6 +87,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_225844) do
     t.string "crp"
     t.decimal "default_value", precision: 10, scale: 2
     t.integer "education_level"
+    t.string "email", null: false
     t.text "extra"
     t.integer "gender", null: false
     t.integer "marital_status"

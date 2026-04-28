@@ -14,7 +14,9 @@ class Profile < ApplicationRecord
   has_many(:medical_records, through: :patient_services, source: :medical_record)
 
   validates(:name, presence: true, length: { minimum: 3 })
+  validates(:email, presence: true, uniqueness: true)
   validates(:gender, presence: true)
+  validates(:therapist, presence: true, if: -> { role.to_sym == :patient })
   validates(:birth, presence: true, comparison: { less_than: -> { Date.current } })
   validates(
     :default_value,

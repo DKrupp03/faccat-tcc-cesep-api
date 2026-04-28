@@ -1,4 +1,11 @@
 pt-BR:
+  user_mailer:
+    set_password_instructions:
+      subject: "Bem-vindo! Defina sua senha de acesso"
+      greeting: "Olá, %{name}!"
+      message: "Sua conta foi criada com sucesso. Clique no link abaixo para definir sua senha e acessar o sistema."
+      link: "Definir minha senha"
+      expiration: "Este link é válido por 6 horas. Após esse prazo, solicite um novo pelo sistema."
   activerecord:
     models:
       profile:
@@ -18,6 +25,7 @@ pt-BR:
         other: "Anamneses"
     errors:
       messages:
+        record_invalid: "A validação falhou: %{errors}"
         blank: "É Necessário preencher este campo!"
         no_active_session: "Não foi possível encontrar uma sessão ativa!"
         required: "É Necessário preencher este campo!"
@@ -26,6 +34,7 @@ pt-BR:
         greater_than_or_equal_to: "Deve ser maior ou igual a %{count}!"
         not_found: "%{model} não encontrado!"
         not_allowed: "Acesso não permitido!"
+        taken: "Já utilizado!"
       models:
         user:
           attributes:
@@ -37,6 +46,8 @@ pt-BR:
               confirmation: "Confirmação não coincide com a senha!"
         profile:
           attributes:
+            email:
+              taken: "Já utilizado!"
             name:
               taken: "Já existe outro perfil com esse nome!"
             birth:

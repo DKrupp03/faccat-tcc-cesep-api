@@ -6,6 +6,7 @@ Faker::Config.locale = :en
 
 admin_profile = Profile.create!(
   name: "Admin",
+  email: "admin@example.com",
   gender: :male,
   birth: Date.new(1980, 6, 15),
   role: :admin
@@ -24,9 +25,11 @@ admin_user.save!
 
 therapist_profiles = 20.times.map do |i|
   gender  = %i[male female].sample
-  name    = gender == :female ? Faker::Name.feminine_name : Faker::Name.masculine_name
+  first   = gender == :female ? Faker::Name.feminine_name : Faker::Name.masculine_name
+  name    = "#{first} #{Faker::Name.last_name}"
   profile = Profile.create!(
     name:   name,
+    email:  "terapeuta#{i + 1}@example.com",
     gender: gender,
     birth:  Faker::Date.birthday(min_age: 28, max_age: 60),
     role:   :therapist
@@ -46,10 +49,12 @@ end
 
 patient_profiles = 100.times.map do |i|
   gender    = %i[male female].sample
-  name      = gender == :female ? Faker::Name.feminine_name : Faker::Name.masculine_name
+  first     = gender == :female ? Faker::Name.feminine_name : Faker::Name.masculine_name
+  name      = "#{first} #{Faker::Name.last_name}"
   therapist = therapist_profiles.sample
   profile   = Profile.create!(
     name:      name,
+    email:     "paciente#{i + 1}@example.com",
     gender:    gender,
     birth:     Faker::Date.birthday(min_age: 18, max_age: 70),
     role:      :patient,

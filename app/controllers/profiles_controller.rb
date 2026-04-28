@@ -46,7 +46,7 @@ class ProfilesController < ApplicationController
     @profile = Profile.new(profile_params)
 
     if @profile.save
-      render_json_success({ profile: @profile.show })
+      render_json_success({ profile: @profile.show(list_attributes: true) })
     else
       render_json_errors(@profile.errors)
     end
@@ -54,7 +54,7 @@ class ProfilesController < ApplicationController
 
   def update
      if @profile.update(profile_params)
-      render_json_success({ profile: @profile.show })
+      render_json_success({ profile: @profile.show(list_attributes: true) })
     else
       render_json_errors(@profile.errors)
     end

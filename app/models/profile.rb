@@ -14,10 +14,9 @@ class Profile < ApplicationRecord
   has_many(:medical_records, through: :patient_services, source: :medical_record)
 
   validates(:name, presence: true, length: { minimum: 3 })
-  validates(:email, presence: true, uniqueness: true)
+  validates(:email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP })
   validates(:gender, presence: true)
-  validates(:therapist, presence: true, if: -> { role.to_sym == :patient })
-  validates(:birth, presence: true, comparison: { less_than: -> { Date.current } })
+  validates(:birth, presence: true, comparison: { less_than: -> { Date.current }, allow_nil: true })
   validates(
     :default_value,
     numericality: { greater_than_or_equal_to: 0 },
@@ -48,6 +47,7 @@ class Profile < ApplicationRecord
     else
       profile.store(:patients, self.patients) if self.therapist?
       profile.store(:services, self.services)
+      profile.store(:photo, self.photo) if self.photo.attached?
     end
 
     return profile

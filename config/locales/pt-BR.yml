@@ -47,7 +47,8 @@ pt-BR:
         profile:
           attributes:
             email:
-              taken: "Já utilizado!"
+              taken: "Já existe outro perfil com esse e-mail!"
+              invalid: "Formato de e-mail inválido!"
             name:
               taken: "Já existe outro perfil com esse nome!"
             birth:

@@ -18,9 +18,9 @@ class RegistrationsController < Devise::RegistrationsController
     respond_with(resource, location: after_sign_up_path_for(resource))
   rescue ActiveRecord::RecordInvalid => e
     if resource&.errors&.any?
-      render_json_errors(resource.errors.full_messages)
+      render_json_errors(resource.errors.messages)
     else
-      render_json_errors(e.record.errors.full_messages)
+      render_json_errors(e.record.errors.messages)
     end
   end
 
@@ -36,7 +36,7 @@ class RegistrationsController < Devise::RegistrationsController
     if resource.persisted?
       render_json_success({ profile: resource.profile.show(list_attributes: true) })
     else
-      render_json_errors(resource.errors.full_messages)
+      render_json_errors(resource.errors.messages)
     end
   end
 

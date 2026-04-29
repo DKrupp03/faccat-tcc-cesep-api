@@ -1,6 +1,6 @@
 class ProfilesController < ApplicationController
   before_action(:authenticate_user!)
-  before_action(:set_profile, only: [:show, :update])
+  before_action(:set_profile, only: [:show, :update, :destroy])
   before_action(:check_permissions, except: [:index])
 
 	def index
@@ -60,13 +60,21 @@ class ProfilesController < ApplicationController
     end
   end
 
+  def destroy
+    if @profile.destroy
+      render_json_success()
+    else
+      render_json_errors(@profile.errors)
+    end
+  end
+
   private
 
   def check_permissions
     case params[:action]
     when "create"
       return render_not_allowed() if !User.current.profile.admin?
-    when "update", "show"
+    when "update", "destroy", "show"
       return render_not_allowed() if !@profile.allowed?
     end
   end
@@ -94,6 +102,7 @@ class ProfilesController < ApplicationController
     params.require(:profile)
       .permit(
         :name,
+        :email,
         :gender,
         :birth,
         :address,

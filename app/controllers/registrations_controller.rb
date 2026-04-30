@@ -62,7 +62,7 @@ class RegistrationsController < Devise::RegistrationsController
     params.require(:user).require(:profile).permit(
       :name, :email, :gender, :birth, :role, :cpf, :crp, :rg, :phone, :address,
       :occupation, :marital_status, :education_level, :default_value,
-      :extra, :therapist_id, parent: {}
+      :extra, :therapist_id, :photo, parent: {}
     )
   end
 end

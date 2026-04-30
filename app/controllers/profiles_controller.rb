@@ -53,7 +53,9 @@ class ProfilesController < ApplicationController
   end
 
   def update
-     if @profile.update(profile_params)
+    @profile.photo.purge if profile_params[:remove_photo].present?
+
+    if @profile.update(profile_params.except(:remove_photo))
       render_json_success({ profile: @profile.show(list_attributes: true) })
     else
       render_json_errors(@profile.errors)
@@ -120,6 +122,7 @@ class ProfilesController < ApplicationController
         :therapist_id,
         :patient_id,
         :photo,
+        :remove_photo,
         parent: {},
       ).to_h.symbolize_keys
   end

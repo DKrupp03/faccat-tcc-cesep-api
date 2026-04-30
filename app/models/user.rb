@@ -11,7 +11,7 @@ class User < ApplicationRecord
     :password,
     format: {
       with: PASSWORD_REGEX,
-      message: "A senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número (8-100 caracteres)"
+      message: I18n.t("activerecord.errors.models.user.attributes.password.invalid")
     },
     if: :password_required?
   )

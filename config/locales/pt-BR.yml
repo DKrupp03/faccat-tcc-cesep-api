@@ -42,6 +42,8 @@ pt-BR:
               not_found: "Não há usuário com este e-mail!"
             reset_password_token:
               invalid: "Token de redefinição de senha inválido ou já utilizado!"
+            password:
+              invalid: "A senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número (8-100 caracteres)!"
             password_confirmation:
               confirmation: "Confirmação não coincide com a senha!"
         profile:

@@ -1,6 +1,5 @@
 class Anamnese < ApplicationRecord
   belongs_to(:patient, class_name: "Profile")
-  belongs_to(:therapist, class_name: "Profile")
 
   validates(:anamnese_type, presence: true)
   validates(:anamnese_data, presence: true)
@@ -10,13 +9,12 @@ class Anamnese < ApplicationRecord
   def show
     anamnese = self.attributes
     anamnese.store(:patient, self.patient)
-    anamnese.store(:therapist, self.therapist)
     anamnese
   end
 
   def allowed?(profile = User.current.profile)
     return true if profile.admin?
-    return self.therapist_id == profile.id if profile.therapist?
+    return self.patient.therapist_id == profile.id if profile.therapist?
     return self.patient_id == profile.id if profile.patient?
     return true
   end

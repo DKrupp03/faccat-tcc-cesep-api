@@ -9,7 +9,7 @@ class AnamnesesController < ApplicationController
   end
 
   def create
-    @anamnese = @profile.build_patient_anamnese(anamnese_params)
+    @anamnese = @profile.build_anamnese(anamnese_params)
 
     if @anamnese.save
       render_json_success({ anamnese: @anamnese.show })
@@ -46,7 +46,7 @@ class AnamnesesController < ApplicationController
   end
 
   def set_anamnese
-    @anamnese = @profile.patient_anamnese
+    @anamnese = @profile.anamnese
 
     return render_not_found(Anamnese) if @anamnese.nil?
   end
@@ -57,7 +57,6 @@ class AnamnesesController < ApplicationController
         :anamnese_type,
         :observations,
         :patient_id,
-        :therapist_id,
         anamnese_data: {}
       ).to_h.symbolize_keys
   end

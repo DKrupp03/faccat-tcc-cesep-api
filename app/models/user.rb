@@ -28,6 +28,10 @@ class User < ApplicationRecord
     jwt_revocation_strategy: self
   )
 
+  def self.revoke_jwt(payload, user)
+    user&.update_column(:jti, SecureRandom.uuid)
+  end
+
   def show
     user = self.attributes
     user.store(:profile, self.profile)

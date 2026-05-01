@@ -3,12 +3,11 @@ class Profile < ApplicationRecord
   has_one_attached(:photo)
 
   belongs_to(:therapist, class_name: "Profile", optional: true)
-  has_many(:patients, class_name: "Profile", foreign_key: :therapist_id)
+  has_many(:patients, class_name: "Profile", foreign_key: :therapist_id, dependent: :nullify)
 
-  has_many(:therapist_anamneses, class_name: "Anamnese", foreign_key: :therapist_id, dependent: :nullify)
-  has_one(:patient_anamnese, class_name: "Anamnese", foreign_key: :patient_id, dependent: :destroy)
+  has_one(:anamnese, class_name: "Anamnese", foreign_key: :patient_id, dependent: :destroy)
 
-  has_many(:therapist_services, class_name: "Service", foreign_key: :therapist_id, dependent: :nullify)
+  has_many(:therapist_services, class_name: "Service", foreign_key: :therapist_id, dependent: :destroy)
   has_many(:patient_services, class_name: "Service", foreign_key: :patient_id, dependent: :destroy)
 
   has_many(:medical_records, through: :patient_services, source: :medical_record)

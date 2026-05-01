@@ -15,6 +15,7 @@ class Anamnese < ApplicationRecord
   end
 
   def allowed?(profile = User.current.profile)
+    return true if profile.admin?
     return self.therapist_id == profile.id if profile.therapist?
     return self.patient_id == profile.id if profile.patient?
     return true

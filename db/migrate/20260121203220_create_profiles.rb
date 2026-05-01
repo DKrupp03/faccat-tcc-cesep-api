@@ -17,6 +17,7 @@ class CreateProfiles < ActiveRecord::Migration[8.1]
       t.decimal(:default_value, precision: 10, scale: 2) # only patients
       t.text(:extra, default: nil) # only patients
       t.integer(:role, null: false)
+      t.boolean(:admin, default: false, null: false)
       t.boolean(:active, default: true)
       t.references(:therapist, type: :int, foreign_key: { to_table: :profiles }) # only patients
       t.timestamps

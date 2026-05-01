@@ -9,7 +9,8 @@ admin_profile = Profile.create!(
   email: "admin@example.com",
   gender: :male,
   birth: Date.new(1980, 6, 15),
-  role: :admin
+  role: :therapist,
+  admin: true
 )
 
 admin_user = User.new(

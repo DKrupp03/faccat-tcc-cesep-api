@@ -30,7 +30,7 @@ class Profile < ApplicationRecord
   enum(:education_level, { elementary_incomplete: 0, elementary_complete: 1, high_school_incomplete: 2,
     high_school_complete: 3, technical: 4, higher_education_incomplete: 5, higher_education_complete: 6,
     postgraduate: 7, masters: 8, doctorate: 9 })
-  enum(:role, { admin: 0, therapist: 1, patient: 2 })
+  enum(:role, { therapist: 0, patient: 1 })
 
   def show(list_attributes: false)
     profile = self.attributes
@@ -121,12 +121,14 @@ class Profile < ApplicationRecord
   end
 
   def self.allowed(profile = User.current.profile)
+    return all if profile.admin?
     return where("id = :id OR therapist_id = :id", id: profile.id) if profile.therapist?
     return where(id: profile.id) if profile.patient?
     return all
   end
 
   def allowed?(profile = User.current.profile)
+    return true if profile.admin?
     return self.id == profile.id || self.therapist_id == profile.id if profile.therapist?
     return self.id == profile.id if profile.patient?
     return true

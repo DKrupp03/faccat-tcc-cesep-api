@@ -118,6 +118,7 @@ class ProfilesController < ApplicationController
         :default_value,
         :extra,
         :role,
+        :admin,
         :active,
         :therapist_id,
         :patient_id,

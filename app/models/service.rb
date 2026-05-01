@@ -70,12 +70,14 @@ class Service < ApplicationRecord
   end
 
   def self.allowed(profile = User.current.profile)
+    return all if profile.admin?
     return by_therapist_id(profile.id) if profile.therapist?
     return by_patient_id(profile.id) if profile.patient?
     return all
   end
 
   def allowed?(profile = User.current.profile)
+    return true if profile.admin?
     return self.therapist_id == profile.id if profile.therapist?
     return self.patient_id == profile.id if profile.patient?
     return true

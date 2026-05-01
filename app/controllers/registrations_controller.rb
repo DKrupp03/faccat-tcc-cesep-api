@@ -8,6 +8,7 @@ class RegistrationsController < Devise::RegistrationsController
 
       password = generate_random_password
       build_resource(sign_up_params.merge(profile_id: profile.id, password: password, password_confirmation: password))
+      resource.skip_confirmation!
       resource.save!
     end
 

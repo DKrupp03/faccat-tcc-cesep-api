@@ -47,6 +47,7 @@ class Profile < ApplicationRecord
       profile.store(:patients, self.patients) if self.therapist?
       profile.store(:services, self.services)
       profile.store(:photo, self.photo) if self.photo.attached?
+      profile.store(:anamnese, self.anamnese) if self.anamnese
     end
 
     return profile

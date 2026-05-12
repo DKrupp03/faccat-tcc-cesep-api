@@ -57,6 +57,7 @@ class AnamnesesController < ApplicationController
         :anamnese_type,
         :observations,
         :patient_id,
+        :therapist_id,
         anamnese_data: {}
       ).to_h.symbolize_keys
   end

@@ -9,7 +9,9 @@ class MedicalRecord < ApplicationRecord
 
   def show
     record = self.attributes
-    record.store(:attachment_urls, self.attachments.map { |a| rails_blob_url(a) })
+    record.store(:attachments, self.attachments.map do |a|
+      { id: a.id, name: a.blob.filename.to_s, url: rails_blob_url(a) }
+    end)
     record.store(:service, self.service)
     record
   end

@@ -39,7 +39,10 @@ class MedicalRecordsController < ApplicationController
   end
 
   def update
-     if @record.update(record_params)
+    remove_ids = params.require(:medical_record).permit(remove_attachment_ids: [])[:remove_attachment_ids] || []
+    @record.attachments.where(id: remove_ids).find_each(&:purge) if remove_ids.any?
+
+    if @record.update(record_params)
       render_json_success({ medical_record: @record.show })
     else
       render_json_errors(@record.errors)

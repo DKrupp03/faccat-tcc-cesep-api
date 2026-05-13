@@ -80,12 +80,12 @@ class MedicalRecordsController < ApplicationController
   end
 
   def filter_params
-    return {} unless params[:records].present?
+    return {} unless params[:medical_records].present?
 
-    params.permit(records: [
+    params.permit(medical_records: [
       :date_start,
       :date_end
-    ])[:records].to_h.symbolize_keys
+    ])[:medical_records].to_h.symbolize_keys
   end
 
   def record_params
@@ -102,11 +102,11 @@ class MedicalRecordsController < ApplicationController
   def order_by
     case params[:order_by]
     when "date_start_asc"
-      { date_start: :asc }
+      { date: :asc }
     when "date_start_desc"
-      { date_start: :desc }
+      { date: :desc }
     else
-      { date_start: :desc }
+      { date: :desc }
     end
   end
 end

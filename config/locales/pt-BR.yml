@@ -70,4 +70,4 @@ pt-BR:
         medical_record:
           attributes:
             service:
-              taken: "Já existe um pagamento associado a este serviço!"
+              taken: "Já existe um prontuário associado a este serviço!"

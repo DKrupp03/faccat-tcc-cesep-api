@@ -4,7 +4,7 @@ class ProfilesController < ApplicationController
   before_action(:check_permissions, except: [:index])
 
 	def index
-    profiles = Profile.by_role(filter_params[:role])
+    profiles = Profile.by_role(filter_params[:role]).allowed
     total = profiles.count
 
     total_active = profiles.by_active(1).count
@@ -15,7 +15,6 @@ class ProfilesController < ApplicationController
       .by_name(filter_params[:name])
       .by_active(filter_params[:active])
       .order(order_by)
-      .allowed
 
     if filter_params[:role] == "patient"
       profiles = profiles.by_therapist_id(filter_params[:therapist_id])
@@ -43,7 +42,7 @@ class ProfilesController < ApplicationController
   end
 
   def create
-    @profile = Profile.new(profile_params)
+    @profile = Profile.new(profile_params.except(:remove_photo))
 
     if @profile.save
       render_json_success({ profile: @profile.show(list_attributes: true) })
@@ -74,8 +73,6 @@ class ProfilesController < ApplicationController
 
   def check_permissions
     case params[:action]
-    when "create"
-      return render_not_allowed() if !User.current.profile.admin?
     when "update", "destroy", "show"
       return render_not_allowed() if !@profile.allowed?
     end

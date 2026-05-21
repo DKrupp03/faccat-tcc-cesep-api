@@ -10,7 +10,7 @@ class Service < ApplicationRecord
     comparison: { greater_than_or_equal_to: -> { Time.current } },
     if: :will_save_change_to_datetime_start?
   )
-  validates(:datetime_end, presence: true, comparison: { greater_than: :datetime_start })
+  validates(:datetime_end, presence: true, comparison: { greater_than: :datetime_start }, if: -> { datetime_start.present? })
   validates(:service_type, presence: true)
   validates(:status, presence: true)
 

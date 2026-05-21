@@ -122,7 +122,7 @@ class Profile < ApplicationRecord
 
   def self.allowed(profile = User.current.profile)
     return all if profile.admin?
-    return where("id = :id OR therapist_id = :id", id: profile.id) if profile.therapist?
+    return where("role = 0 OR therapist_id = :id", id: profile.id) if profile.therapist?
     return where(id: profile.id) if profile.patient?
     return all
   end

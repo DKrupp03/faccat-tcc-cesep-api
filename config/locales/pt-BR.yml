@@ -58,13 +58,13 @@ pt-BR:
         service:
           attributes:
             datetime_start:
-              greater_than_or_equal_to: "Deve ser maior ou igual à data e hora atual!"
+              greater_than_or_equal_to: "Deve ser posterior à data e hora atual!"
             datetime_end:
-              greater_than: "Deve ser maior que a data e hora de início!"
+              greater_than: "Deve ser posterior ao início!"
         payment:
           attributes:
             expiration_date:
-              greater_than_or_equal_to: "Deve ser maior que a data atual!"
+              greater_than_or_equal_to: "Deve ser posterior à data atual!"
             service:
               taken: "Já existe um pagamento associado a este serviço!"
         medical_record:

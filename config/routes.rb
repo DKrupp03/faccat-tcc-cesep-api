@@ -22,7 +22,6 @@ Rails.application.routes.draw do
   resources(:profiles, only: [:index, :show, :create, :update, :destroy]) do
     resources(:anamneses, only: [:show, :create, :update])
     resources(:medical_records, only: [:index, :show, :create, :update, :destroy])
-    get(:by_patient, on: :collection)
   end
 
   resources(:services, only: [:index, :show, :create, :update, :destroy])

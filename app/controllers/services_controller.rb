@@ -4,7 +4,10 @@ class ServicesController < ApplicationController
   before_action(:check_permissions, except: [:index])
 
 	def index
-    services = Service.includes(:patient, :therapist, :medical_record, :payment)
+    services = Service.allowed
+    total = services.count
+
+    services = services.includes(:patient, :therapist, :medical_record, :payment)
       .by_status(filter_params[:status])
       .by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
@@ -12,9 +15,8 @@ class ServicesController < ApplicationController
       .by_therapist_id(filter_params[:therapist_id])
       .by_service_type(filter_params[:service_type])
       .order(order_by)
-      .allowed
 
-    total = services.count
+    total_filtered = services.count
 
     if params[:page].present?
       services = services.page(params[:page]).per(params[:per_page] || 30)
@@ -22,7 +24,8 @@ class ServicesController < ApplicationController
 
 		render_json_success({
       services: services.map(&:show),
-      total: total
+      total: total,
+      total_filtered: total_filtered
     })
 	end
 
@@ -62,9 +65,8 @@ class ServicesController < ApplicationController
     case params[:action]
     when "create"
       current_profile = User.current.profile
-      return render_not_allowed() unless current_profile.admin? || current_profile.therapist?
-      if current_profile.therapist?
-        return render_not_allowed() if params.dig(:service, :therapist_id).to_i != current_profile.id
+      if !current_profile.admin? && params.dig(:service, :therapist_id) != current_profile.id
+        return render_not_allowed()
       end
     when "update", "destroy", "show"
       return render_not_allowed() if !@service.allowed?

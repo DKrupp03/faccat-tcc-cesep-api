@@ -1,7 +1,7 @@
 class PaymentsController < ApplicationController
   before_action(:authenticate_user!)
   before_action(:set_payment, only: [:show, :update, :destroy])
-  before_action(:check_permissions, except: [:index])
+  before_action(:check_permissions, except: [:index, :status_chart, :monthly_chart])
 
 	def index
     filtered = Payment.includes(:service)
@@ -64,7 +64,52 @@ class PaymentsController < ApplicationController
     end
   end
 
+  # Distribuição dos pagamentos por status (não é afetada pelos filtros do painel).
+  def status_chart
+    payments = Payment.allowed
+
+    status_chart = [:paid, :overdue, :unpaid].map do |status|
+      { status: status, count: payments.by_status(status).count }
+    end
+
+    render_json_success({ status_chart: status_chart })
+  end
+
+  # Pagamentos recebidos x a receber por mês nos últimos 12 meses
+  # (não é afetado pelos filtros do painel).
+  def monthly_chart
+    start_date = Date.current.beginning_of_month.prev_month(11)
+    payments = Payment.allowed.where("expiration_date >= ?", start_date)
+
+    received = payments.where.not(payment_date: nil)
+    to_receive = payments.where(payment_date: nil)
+
+    received_value = group_by_month(received, :sum)
+    received_count = group_by_month(received, :count)
+    to_receive_value = group_by_month(to_receive, :sum)
+    to_receive_count = group_by_month(to_receive, :count)
+
+    monthly_chart = (0..11).map do |offset|
+      month = start_date.next_month(offset).strftime("%Y-%m")
+      {
+        month: month,
+        received: (received_value[month] || 0).to_f,
+        received_count: received_count[month] || 0,
+        to_receive: (to_receive_value[month] || 0).to_f,
+        to_receive_count: to_receive_count[month] || 0
+      }
+    end
+
+    render_json_success({ monthly_chart: monthly_chart })
+  end
+
   private
+
+  def group_by_month(scope, operation)
+    grouped = scope.group(Arel.sql("DATE_TRUNC('month', expiration_date)"))
+    grouped = operation == :sum ? grouped.sum(:value) : grouped.count
+    grouped.transform_keys { |date| date.to_date.strftime("%Y-%m") }
+  end
 
   def check_permissions
     case params[:action]

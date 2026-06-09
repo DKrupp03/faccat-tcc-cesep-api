@@ -26,5 +26,10 @@ Rails.application.routes.draw do
 
   resources(:services, only: [:index, :show, :create, :update, :destroy])
 
-  resources(:payments, only: [:index, :show, :create, :update, :destroy])
+  resources(:payments, only: [:index, :show, :create, :update, :destroy]) do
+    collection do
+      get :status_chart
+      get :monthly_chart
+    end
+  end
 end

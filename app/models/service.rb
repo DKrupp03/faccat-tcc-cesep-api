@@ -69,6 +69,16 @@ class Service < ApplicationRecord
     return all
   end
 
+  def self.without_payment(without_payment)
+    return where.not(id: Payment.select(:service_id)) if ActiveModel::Type::Boolean.new.cast(without_payment)
+    return all
+  end
+
+  def self.without_medical_record(without_medical_record)
+    return where.not(id: MedicalRecord.select(:service_id)) if ActiveModel::Type::Boolean.new.cast(without_medical_record)
+    return all
+  end
+
   def self.allowed(profile = User.current.profile)
     return all if profile.admin?
     return by_therapist_id(profile.id) if profile.therapist?

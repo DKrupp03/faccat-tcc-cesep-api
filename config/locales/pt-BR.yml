@@ -32,6 +32,7 @@ pt-BR:
         too_short: "É muito curto (mínimo %{count} caracteres)!"
         too_long: "É muito longo (máximo %{count} caracteres)!"
         greater_than_or_equal_to: "Deve ser maior ou igual a %{count}!"
+        not_a_number: "Deve ser um número válido!"
         not_found: "%{model} não encontrado!"
         not_allowed: "Acesso não permitido!"
         taken: "Já utilizado!"

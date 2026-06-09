@@ -14,6 +14,8 @@ class ServicesController < ApplicationController
       .by_patient_id(filter_params[:patient_id])
       .by_therapist_id(filter_params[:therapist_id])
       .by_service_type(filter_params[:service_type])
+      .without_payment(filter_params[:without_payment])
+      .without_medical_record(filter_params[:without_medical_record])
       .order(order_by)
 
     total_filtered = services.count
@@ -88,7 +90,9 @@ class ServicesController < ApplicationController
       :patient_id,
       :therapist_id,
       :service_type,
-      :status
+      :status,
+      :without_payment,
+      :without_medical_record
     ])[:services].to_h.symbolize_keys
   end
 

@@ -4,7 +4,7 @@ class PaymentsController < ApplicationController
   before_action(:check_permissions, except: [:index])
 
 	def index
-    payments = Payment.includes(:service)
+    filtered = Payment.includes(:service)
       .with_attached_attachments
       .by_status(filter_params[:status])
       .by_payment_date_start(filter_params[:payment_date_start])
@@ -12,10 +12,14 @@ class PaymentsController < ApplicationController
       .by_expiration_date_start(filter_params[:expiration_date_start])
       .by_expiration_date_end(filter_params[:expiration_date_end])
       .by_patient_id(filter_params[:patient_id])
-      .order(order_by)
       .allowed
 
-    total = payments.count
+    total = Payment.allowed.count
+    total_filtered = filtered.count
+    total_received = filtered.where.not(payment_date: nil).sum(:value)
+    total_to_receive = filtered.where(payment_date: nil).sum(:value)
+
+    payments = filtered.order(order_by)
 
     if params[:page].present?
       payments = payments.page(params[:page]).per(params[:per_page] || 30)
@@ -23,7 +27,10 @@ class PaymentsController < ApplicationController
 
 		render_json_success({
       payments: payments.map(&:show),
-      total: total
+      total: total,
+      total_filtered: total_filtered,
+      total_received: total_received,
+      total_to_receive: total_to_receive
     })
 	end
 
@@ -63,10 +70,8 @@ class PaymentsController < ApplicationController
     case params[:action]
     when "create"
       current_profile = User.current.profile
-      return render_not_allowed() unless current_profile.admin? || current_profile.therapist?
-      if current_profile.therapist?
-        service = Service.find_by_id(params.dig(:payment, :service_id))
-        return render_not_allowed() if service.nil? || service.therapist_id != current_profile.id
+      if !current_profile.admin? && params.dig(:service, :therapist_id) != current_profile.id
+        return render_not_allowed()
       end
     when "update", "destroy", "show"
       return render_not_allowed() if !@payment.allowed?

@@ -89,7 +89,7 @@ service_observations = [
   "Sessão de relaxamento muscular progressivo",
   "Revisão de diário de pensamentos automáticos",
   "Trabalho com luto e elaboração de perdas",
-  "Sessão de orientação familiar",
+  "Sessão de orientação familiar"
 ]
 
 progress_titles = [
@@ -102,7 +102,7 @@ progress_titles = [
   "Revisão de objetivos terapêuticos",
   "Exploração de crenças centrais",
   "Trabalho com autoestima",
-  "Consolidação de ganhos terapêuticos",
+  "Consolidação de ganhos terapêuticos"
 ]
 
 progress_observations = [
@@ -120,7 +120,7 @@ progress_observations = [
   "Paciente demonstrou resistência inicial, mas boa adesão ao longo da sessão.",
   "Progresso consistente; metas de curto prazo sendo alcançadas.",
   "Sessão encerrada com plano de ação claro para a semana.",
-  "Paciente relatou boa aplicação das técnicas aprendidas no cotidiano.",
+  "Paciente relatou boa aplicação das técnicas aprendidas no cotidiano."
 ]
 
 # ─── Atendimentos, Pagamentos e Prontuários ────────────────────────────────────
@@ -130,16 +130,16 @@ patient_profiles.each do |patient|
 
   rand(0..20).times do
     offset_days = rand(-180..90)
-    start_time  = Time.current + offset_days.days + rand(8..17).hours + [0, 30].sample.minutes
-    end_time    = start_time + [45, 60, 90].sample.minutes
+    start_time  = Time.current + offset_days.days + rand(8..17).hours + [ 0, 30 ].sample.minutes
+    end_time    = start_time + [ 45, 60, 90 ].sample.minutes
 
     status = if offset_days < -7
                [ :attended, :no_show ].sample
-             elsif offset_days < 0
+    elsif offset_days < 0
                [ :attended, :cancelled ].sample
-             else
+    else
                [ :scheduled, :confirmed ].sample
-             end
+    end
 
     service = Service.new(
       datetime_start: start_time,

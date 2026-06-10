@@ -1,10 +1,10 @@
 class MedicalRecordsController < ApplicationController
   before_action(:authenticate_user!)
   before_action(:set_profile)
-  before_action(:set_record, only: [:show, :update, :destroy])
+  before_action(:set_record, only: [ :show, :update, :destroy ])
   before_action(:check_permissions)
 
-	def index
+  def index
     records = @profile.medical_records.includes(:service)
       .with_attached_attachments
       .by_date_start(filter_params[:date_start])
@@ -18,11 +18,11 @@ class MedicalRecordsController < ApplicationController
       records = records.page(params[:page]).per(params[:per_page] || 30)
     end
 
-		render_json_success({
+    render_json_success({
       medical_records: records.map(&:show),
       total: total
     })
-	end
+  end
 
   def show
     render_json_success({ medical_record: @record.show })
@@ -67,23 +67,23 @@ class MedicalRecordsController < ApplicationController
     case params[:action]
     when "index", "create"
       if !User.current.profile.admin? && @profile.therapist_id != User.current.profile_id
-        return render_not_allowed()
+        render_not_allowed()
       end
     when "update", "destroy", "show"
-      return render_not_allowed() if !@record.allowed?
+      render_not_allowed() if !@record.allowed?
     end
   end
 
   def set_profile
     @profile = Profile.find_by_id(params[:profile_id])
 
-    return render_not_found(Profile) if @profile.nil?
+    render_not_found(Profile) if @profile.nil?
   end
 
   def set_record
     @record = @profile.medical_records.find_by_id(params[:id])
 
-    return render_not_found(MedicalRecord) if @record.nil?
+    render_not_found(MedicalRecord) if @record.nil?
   end
 
   def filter_params

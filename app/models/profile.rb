@@ -50,7 +50,7 @@ class Profile < ApplicationRecord
       profile.store(:anamnese, self.anamnese) if self.anamnese
     end
 
-    return profile
+    profile
   end
 
   def services
@@ -71,27 +71,27 @@ class Profile < ApplicationRecord
 
   def self.by_name(name)
     return where("name ILIKE ?", "%#{name}%") if name.present?
-    return all
+    all
   end
 
   def self.by_role(role)
     return where(role: role) if role.present?
-    return all
+    all
   end
 
   def self.by_active(active)
     return where(active: active) if active.to_i >= 0
-    return all
+    all
   end
 
   def self.by_therapist_id(therapist_id)
     return where(therapist_id: therapist_id, role: :patient) if therapist_id.present?
-    return all
+    all
   end
 
   def self.by_patient_id(patient_id)
     return joins(:patients).where(patients: { id: patient_id }) if patient_id.present?
-    return all
+    all
   end
 
   def self.by_payment_status(payment_status)
@@ -124,13 +124,13 @@ class Profile < ApplicationRecord
     return all if profile.admin?
     return where("role = 0 OR therapist_id = :id", id: profile.id) if profile.therapist?
     return where(id: profile.id) if profile.patient?
-    return all
+    all
   end
 
   def allowed?(profile = User.current.profile)
     return true if profile.admin?
     return self.id == profile.id || self.therapist_id == profile.id if profile.therapist?
     return self.id == profile.id if profile.patient?
-    return true
+    true
   end
 end

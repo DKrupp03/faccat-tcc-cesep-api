@@ -18,25 +18,25 @@ class MedicalRecord < ApplicationRecord
 
   def self.by_date_start(date_start)
     return where("date >= ?", date_start) if date_start.present?
-    return all
+    all
   end
 
   def self.by_date_end(date_end)
     return where("date <= ?", date_end) if date_end.present?
-    return all
+    all
   end
 
   def self.allowed(profile = User.current.profile)
     return all if profile.admin?
     return joins(:service).where(services: { therapist_id: profile.id }) if profile.therapist?
     return joins(:service).where(services: { patient_id: profile.id }) if profile.patient?
-    return all
+    all
   end
 
   def allowed?(profile = User.current.profile)
     return true if profile.admin?
     return self.service.therapist_id == profile.id if profile.therapist?
     return self.service.patient_id == profile.id if profile.patient?
-    return true
+    true
   end
 end

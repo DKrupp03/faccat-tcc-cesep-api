@@ -19,14 +19,14 @@ Rails.application.routes.draw do
     )
   end
 
-  resources(:profiles, only: [:index, :show, :create, :update, :destroy]) do
-    resources(:anamneses, only: [:show, :create, :update])
-    resources(:medical_records, only: [:index, :show, :create, :update, :destroy])
+  resources(:profiles, only: [ :index, :show, :create, :update, :destroy ]) do
+    resources(:anamneses, only: [ :show, :create, :update ])
+    resources(:medical_records, only: [ :index, :show, :create, :update, :destroy ])
   end
 
-  resources(:services, only: [:index, :show, :create, :update, :destroy])
+  resources(:services, only: [ :index, :show, :create, :update, :destroy ])
 
-  resources(:payments, only: [:index, :show, :create, :update, :destroy]) do
+  resources(:payments, only: [ :index, :show, :create, :update, :destroy ]) do
     collection do
       get :status_chart
       get :monthly_chart

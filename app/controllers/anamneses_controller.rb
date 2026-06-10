@@ -1,7 +1,7 @@
 class AnamnesesController < ApplicationController
   before_action(:authenticate_user!)
   before_action(:set_profile)
-  before_action(:set_anamnese, only: [:show, :update])
+  before_action(:set_anamnese, only: [ :show, :update ])
   before_action(:check_permissions)
 
   def show
@@ -21,9 +21,9 @@ class AnamnesesController < ApplicationController
   def update
      if @anamnese.update(anamnese_params)
       render_json_success({ anamnese: @anamnese.show })
-    else
+     else
       render_json_errors(@anamnese.errors)
-    end
+     end
   end
 
   private
@@ -32,23 +32,23 @@ class AnamnesesController < ApplicationController
     case params[:action]
     when "create"
       if !User.current.profile.admin? && @profile.therapist_id != User.current.profile_id
-        return render_not_allowed()
+        render_not_allowed()
       end
     when "update", "show"
-      return render_not_allowed() if !@anamnese.allowed?
+      render_not_allowed() if !@anamnese.allowed?
     end
   end
 
   def set_profile
     @profile = Profile.find_by_id(params[:profile_id])
 
-    return render_not_found(Profile) if @profile.nil?
+    render_not_found(Profile) if @profile.nil?
   end
 
   def set_anamnese
     @anamnese = @profile.anamnese
 
-    return render_not_found(Anamnese) if @anamnese.nil?
+    render_not_found(Anamnese) if @anamnese.nil?
   end
 
   def anamnese_params

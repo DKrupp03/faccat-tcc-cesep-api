@@ -11,7 +11,7 @@ class CreateAnamneses < ActiveRecord::Migration[8.1]
 
     add_index(
       :anamneses,
-      [:therapist_id, :patient_id],
+      [ :therapist_id, :patient_id ],
       unique: true,
       name: "index_anamnese_unique"
     )

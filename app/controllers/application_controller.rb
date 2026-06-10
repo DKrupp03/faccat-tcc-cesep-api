@@ -13,7 +13,7 @@ class ApplicationController < ActionController::API
     ActiveStorage::Current.url_options = { host: host }
     Rails.application.routes.default_url_options[:host] = host
   end
-  
+
   def render_json_success(response = {}, status: :ok)
     response[:success] = true
     render(json: response, status: status)

@@ -17,6 +17,6 @@ class Anamnese < ApplicationRecord
     return true if profile.admin?
     return self.patient.therapist_id == profile.id if profile.therapist?
     return self.patient_id == profile.id if profile.patient?
-    return true
+    true
   end
 end

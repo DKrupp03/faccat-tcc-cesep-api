@@ -19,13 +19,13 @@ class Service < ApplicationRecord
     # Psicologia Clínica – Psicoterapias
     clinical_psychology_tcc: 0, clinical_psychology_psychoanalysis: 1,
     clinical_psychology_systemic: 2, clinical_psychology_humanistic: 3,
-  
+
     psychological_emergency_care: 4, # Plantão Psicológico
     school_psychology: 5, # Psicologia Escolar
     forensic_psychology: 6, # Psicologia Jurídica
     community_psychology: 7, # Psicologia Comunitária
     emergency_and_disaster_psychology: 8, # Psicologia de Prevenção das Emergências e Desastres
-  
+
     # Psicologia Organizacional
     organizational_psychology_career_guidance: 9, organizational_psychology_worker_health: 10
   })
@@ -41,55 +41,55 @@ class Service < ApplicationRecord
 
   def self.by_date_start(date_start)
     return where("datetime_start >= ?", date_start) if date_start.present?
-    return all
+    all
   end
 
   def self.by_date_end(date_end)
     return where("datetime_end <= ?", date_end) if date_end.present?
-    return all
+    all
   end
 
   def self.by_patient_id(patient_id)
     return where(patient_id: patient_id) if patient_id.present?
-    return all
+    all
   end
 
   def self.by_therapist_id(therapist_id)
     return where(therapist_id: therapist_id) if therapist_id.present?
-    return all
+    all
   end
 
   def self.by_service_type(service_type)
     return where(service_type: service_type) if service_type.present?
-    return all
+    all
   end
 
   def self.by_status(status)
     return where(status: status) if status.present?
-    return all
+    all
   end
 
   def self.without_payment(without_payment)
     return where.not(id: Payment.select(:service_id)) if ActiveModel::Type::Boolean.new.cast(without_payment)
-    return all
+    all
   end
 
   def self.without_medical_record(without_medical_record)
     return where.not(id: MedicalRecord.select(:service_id)) if ActiveModel::Type::Boolean.new.cast(without_medical_record)
-    return all
+    all
   end
 
   def self.allowed(profile = User.current.profile)
     return all if profile.admin?
     return by_therapist_id(profile.id) if profile.therapist?
     return by_patient_id(profile.id) if profile.patient?
-    return all
+    all
   end
 
   def allowed?(profile = User.current.profile)
     return true if profile.admin?
     return self.therapist_id == profile.id if profile.therapist?
     return self.patient_id == profile.id if profile.patient?
-    return true
+    true
   end
 end

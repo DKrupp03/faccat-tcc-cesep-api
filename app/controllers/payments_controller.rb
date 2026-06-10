@@ -1,9 +1,9 @@
 class PaymentsController < ApplicationController
   before_action(:authenticate_user!)
-  before_action(:set_payment, only: [:show, :update, :destroy])
-  before_action(:check_permissions, except: [:index, :status_chart, :monthly_chart])
+  before_action(:set_payment, only: [ :show, :update, :destroy ])
+  before_action(:check_permissions, except: [ :index, :status_chart, :monthly_chart ])
 
-	def index
+  def index
     filtered = Payment.includes(:service)
       .with_attached_attachments
       .by_status(filter_params[:status])
@@ -25,14 +25,14 @@ class PaymentsController < ApplicationController
       payments = payments.page(params[:page]).per(params[:per_page] || 30)
     end
 
-		render_json_success({
+    render_json_success({
       payments: payments.map(&:show),
       total: total,
       total_filtered: total_filtered,
       total_received: total_received,
       total_to_receive: total_to_receive
     })
-	end
+  end
 
   def show
     render_json_success({ payment: @payment.show })
@@ -75,7 +75,7 @@ class PaymentsController < ApplicationController
   def status_chart
     payments = Payment.allowed
 
-    status_chart = [:paid, :overdue, :unpaid].map do |status|
+    status_chart = [ :paid, :overdue, :unpaid ].map do |status|
       { status: status, count: payments.by_status(status).count }
     end
 
@@ -123,17 +123,17 @@ class PaymentsController < ApplicationController
     when "create"
       current_profile = User.current.profile
       if !current_profile.admin? && params.dig(:service, :therapist_id) != current_profile.id
-        return render_not_allowed()
+        render_not_allowed()
       end
     when "update", "destroy", "show"
-      return render_not_allowed() if !@payment.allowed?
+      render_not_allowed() if !@payment.allowed?
     end
   end
 
   def set_payment
     @payment = Payment.find_by_id(params[:id])
 
-    return render_not_found(Payment) if @payment.nil?
+    render_not_found(Payment) if @payment.nil?
   end
 
   def filter_params

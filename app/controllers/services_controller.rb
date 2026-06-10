@@ -1,9 +1,9 @@
 class ServicesController < ApplicationController
   before_action(:authenticate_user!)
-  before_action(:set_service, only: [:show, :update, :destroy])
-  before_action(:check_permissions, except: [:index])
+  before_action(:set_service, only: [ :show, :update, :destroy ])
+  before_action(:check_permissions, except: [ :index ])
 
-	def index
+  def index
     services = Service.allowed
     total = services.count
 
@@ -24,12 +24,12 @@ class ServicesController < ApplicationController
       services = services.page(params[:page]).per(params[:per_page] || 30)
     end
 
-		render_json_success({
+    render_json_success({
       services: services.map(&:show),
       total: total,
       total_filtered: total_filtered
     })
-	end
+  end
 
   def show
     render_json_success({ service: @service.show })
@@ -48,9 +48,9 @@ class ServicesController < ApplicationController
   def update
      if @service.update(service_params)
       render_json_success({ service: @service.show })
-    else
+     else
       render_json_errors(@service.errors)
-    end
+     end
   end
 
   def destroy
@@ -68,17 +68,17 @@ class ServicesController < ApplicationController
     when "create"
       current_profile = User.current.profile
       if !current_profile.admin? && params.dig(:service, :therapist_id) != current_profile.id
-        return render_not_allowed()
+        render_not_allowed()
       end
     when "update", "destroy", "show"
-      return render_not_allowed() if !@service.allowed?
+      render_not_allowed() if !@service.allowed?
     end
   end
 
   def set_service
     @service = Service.find_by_id(params[:id])
 
-    return render_not_found(Service) if @service.nil?
+    render_not_found(Service) if @service.nil?
   end
 
   def filter_params

@@ -1,9 +1,9 @@
 class ProfilesController < ApplicationController
   before_action(:authenticate_user!)
-  before_action(:set_profile, only: [:show, :update, :destroy])
-  before_action(:check_permissions, except: [:index])
+  before_action(:set_profile, only: [ :show, :update, :destroy ])
+  before_action(:check_permissions, except: [ :index ])
 
-	def index
+  def index
     profiles = Profile.by_role(filter_params[:role]).allowed
     total = profiles.count
 
@@ -29,13 +29,13 @@ class ProfilesController < ApplicationController
       profiles = profiles.page(params[:page]).per(params[:per_page] || 30)
     end
 
-		render_json_success({
+    render_json_success({
       profiles: profiles.map { |p| p.show(list_attributes: true) },
       total_filtered: total_filtered,
       total: total,
-      total_active: total_active,
+      total_active: total_active
     })
-	end
+  end
 
   def show
     render_json_success({ profile: @profile.show })
@@ -74,14 +74,14 @@ class ProfilesController < ApplicationController
   def check_permissions
     case params[:action]
     when "update", "destroy", "show"
-      return render_not_allowed() if !@profile.allowed?
+      render_not_allowed() if !@profile.allowed?
     end
   end
 
   def set_profile
     @profile = Profile.find_by_id(params[:id])
 
-    return render_not_found(Profile) if @profile.nil?
+    render_not_found(Profile) if @profile.nil?
   end
 
   def filter_params

@@ -13,7 +13,7 @@ class Payment < ApplicationRecord
   validates(:service, uniqueness: true, on: :create)
 
   enum(:payment_method, {
-    cash: 0,  pix: 1, credit_card: 2, debit_card: 3, bank_slip: 4, bank_transfer: 5,
+    cash: 0,  pix: 1, credit_card: 2, debit_card: 3, bank_slip: 4, bank_transfer: 5
   })
 
   def show
@@ -38,27 +38,27 @@ class Payment < ApplicationRecord
 
   def self.by_payment_date_start(payment_date_start)
     return where("payment_date >= ?", payment_date_start) if payment_date_start.present?
-    return all
+    all
   end
 
   def self.by_payment_date_end(payment_date_end)
     return where("payment_date <= ?", payment_date_end) if payment_date_end.present?
-    return all
+    all
   end
 
   def self.by_expiration_date_start(expiration_date_start)
     return where("expiration_date >= ?", expiration_date_start) if expiration_date_start.present?
-    return all
+    all
   end
 
   def self.by_expiration_date_end(expiration_date_end)
     return where("expiration_date <= ?", expiration_date_end) if expiration_date_end.present?
-    return all
+    all
   end
 
   def self.by_patient_id(patient_id)
     return joins(:service).where(services: { patient_id: patient_id }) if patient_id.present?
-    return all
+    all
   end
 
   def self.by_status(status)
@@ -78,13 +78,13 @@ class Payment < ApplicationRecord
     return all if profile.admin?
     return joins(:service).where(services: { therapist_id: profile.id }) if profile.therapist?
     return joins(:service).where(services: { patient_id: profile.id }) if profile.patient?
-    return all
+    all
   end
 
   def allowed?(profile = User.current.profile)
     return true if profile.admin?
     return self.service.therapist_id == profile.id if profile.therapist?
     return self.service.patient_id == profile.id if profile.patient?
-    return true
+    true
   end
 end

@@ -9,7 +9,7 @@ class SessionsController < Devise::SessionsController
         id: resource.id,
         email: resource.email,
         profile_id: resource.profile_id
-      },
+      }
     })
   end
 

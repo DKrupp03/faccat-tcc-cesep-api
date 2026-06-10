@@ -1,11 +1,14 @@
 class ApplicationController < ActionController::API
+  include Authorizable
+  include Sortable
+
   before_action(:set_current_user)
   before_action(:set_url_options)
 
   protected
 
   def set_current_user
-    User.current = current_user if current_user
+    Current.user = current_user
   end
 
   def set_url_options
@@ -34,5 +37,13 @@ class ApplicationController < ActionController::API
     render_json_errors(
       I18n.t("activerecord.errors.messages.not_found", model: model.model_name.human)
     )
+  end
+
+  # Permite e normaliza filtros aninhados sob params[key] (ex.: params[:payments]).
+  # Retorna {} quando o grupo não veio na requisição.
+  def nested_filter_params(key, fields)
+    return {} unless params[key].present?
+
+    params.permit(key => fields)[key].to_h.symbolize_keys
   end
 end

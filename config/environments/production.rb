@@ -77,11 +77,11 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # Defina APP_HOST com o domínio público (ex.: "clinica.exemplo.com.br").
+  # Sem APP_HOST nenhum host é restrito, evitando quebrar o boot onde não há domínio definido.
+  if ENV["APP_HOST"].present?
+    config.hosts << ENV["APP_HOST"].split(":").first
+    # Pula a proteção de Host para o health check do load balancer.
+    config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  end
 end

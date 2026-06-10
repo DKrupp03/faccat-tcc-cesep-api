@@ -3,6 +3,12 @@ class ProfilesController < ApplicationController
   before_action(:set_profile, only: [ :show, :update, :destroy ])
   before_action(:check_permissions, except: [ :index ])
 
+  sortable(
+    "name_asc" => { name: :asc },
+    "name_desc" => { name: :desc },
+    default: { name: :asc }
+  )
+
   def index
     profiles = Profile.by_role(filter_params[:role]).allowed
     total = profiles.count
@@ -74,7 +80,7 @@ class ProfilesController < ApplicationController
   def check_permissions
     case params[:action]
     when "update", "destroy", "show"
-      render_not_allowed() if !@profile.allowed?
+      authorize_record!(@profile)
     end
   end
 
@@ -85,16 +91,14 @@ class ProfilesController < ApplicationController
   end
 
   def filter_params
-    return {} unless params[:profiles].present?
-
-    params.permit(profiles: [
+    nested_filter_params(:profiles, [
       :name,
       :therapist_id,
       :patient_id,
       :active,
       :role,
       :payment_status
-    ])[:profiles].to_h.symbolize_keys
+    ])
   end
 
   def profile_params
@@ -123,16 +127,5 @@ class ProfilesController < ApplicationController
         :remove_photo,
         parent: {},
       ).to_h.symbolize_keys
-  end
-
-  def order_by
-    case params[:order_by]
-    when "name_asc"
-      { name: :asc }
-    when "name_desc"
-      { name: :desc }
-    else
-      { name: :asc }
-    end
   end
 end

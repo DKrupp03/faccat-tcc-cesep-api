@@ -3,6 +3,12 @@ class ServicesController < ApplicationController
   before_action(:set_service, only: [ :show, :update, :destroy ])
   before_action(:check_permissions, except: [ :index ])
 
+  sortable(
+    "datetime_start_asc" => { datetime_start: :asc },
+    "datetime_start_desc" => { datetime_start: :desc },
+    default: { datetime_start: :desc }
+  )
+
   def index
     services = Service.allowed
     total = services.count
@@ -66,12 +72,12 @@ class ServicesController < ApplicationController
   def check_permissions
     case params[:action]
     when "create"
-      current_profile = User.current.profile
+      current_profile = Current.profile
       if !current_profile.admin? && params.dig(:service, :therapist_id) != current_profile.id
         render_not_allowed()
       end
     when "update", "destroy", "show"
-      render_not_allowed() if !@service.allowed?
+      authorize_record!(@service)
     end
   end
 
@@ -82,9 +88,7 @@ class ServicesController < ApplicationController
   end
 
   def filter_params
-    return {} unless params[:services].present?
-
-    params.permit(services: [
+    nested_filter_params(:services, [
       :date_start,
       :date_end,
       :patient_id,
@@ -93,7 +97,7 @@ class ServicesController < ApplicationController
       :status,
       :without_payment,
       :without_medical_record
-    ])[:services].to_h.symbolize_keys
+    ])
   end
 
   def service_params
@@ -107,16 +111,5 @@ class ServicesController < ApplicationController
         :patient_id,
         :therapist_id
       ).to_h.symbolize_keys
-  end
-
-  def order_by
-    case params[:order_by]
-    when "datetime_start_asc"
-      { datetime_start: :asc }
-    when "datetime_start_desc"
-      { datetime_start: :desc }
-    else
-      { datetime_start: :desc }
-    end
   end
 end

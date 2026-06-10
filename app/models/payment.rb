@@ -1,4 +1,6 @@
 class Payment < ApplicationRecord
+  include Attachable
+
   belongs_to(:service)
   has_many_attached(:attachments)
 
@@ -18,9 +20,7 @@ class Payment < ApplicationRecord
 
   def show
     payment = self.attributes
-    payment.store(:attachments, self.attachments.map do |a|
-      { id: a.id, name: a.blob.filename.to_s, url: rails_blob_url(a) }
-    end)
+    payment.store(:attachments, attachments_json)
     payment.store(:service, self.service&.show)
     payment.store(:status, self.status)
     payment
@@ -74,14 +74,14 @@ class Payment < ApplicationRecord
     end
   end
 
-  def self.allowed(profile = User.current.profile)
+  def self.allowed(profile = Current.profile)
     return all if profile.admin?
     return joins(:service).where(services: { therapist_id: profile.id }) if profile.therapist?
     return joins(:service).where(services: { patient_id: profile.id }) if profile.patient?
     all
   end
 
-  def allowed?(profile = User.current.profile)
+  def allowed?(profile = Current.profile)
     return true if profile.admin?
     return self.service.therapist_id == profile.id if profile.therapist?
     return self.service.patient_id == profile.id if profile.patient?

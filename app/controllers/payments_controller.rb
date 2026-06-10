@@ -3,6 +3,14 @@ class PaymentsController < ApplicationController
   before_action(:set_payment, only: [ :show, :update, :destroy ])
   before_action(:check_permissions, except: [ :index, :status_chart, :monthly_chart ])
 
+  sortable(
+    "expiration_date_asc" => { expiration_date: :asc },
+    "expiration_date_desc" => { expiration_date: :desc },
+    "payment_date_asc" => { payment_date: :asc },
+    "payment_date_desc" => { payment_date: :desc },
+    default: { expiration_date: :desc }
+  )
+
   def index
     filtered = Payment.includes(:service)
       .with_attached_attachments
@@ -121,12 +129,12 @@ class PaymentsController < ApplicationController
   def check_permissions
     case params[:action]
     when "create"
-      current_profile = User.current.profile
+      current_profile = Current.profile
       if !current_profile.admin? && params.dig(:service, :therapist_id) != current_profile.id
         render_not_allowed()
       end
     when "update", "destroy", "show"
-      render_not_allowed() if !@payment.allowed?
+      authorize_record!(@payment)
     end
   end
 
@@ -137,16 +145,14 @@ class PaymentsController < ApplicationController
   end
 
   def filter_params
-    return {} unless params[:payments].present?
-
-    params.permit(payments: [
+    nested_filter_params(:payments, [
       :payment_date_start,
       :payment_date_end,
       :expiration_date_start,
       :expiration_date_end,
       :patient_id,
       :status
-    ])[:payments].to_h.symbolize_keys
+    ])
   end
 
   def payment_params
@@ -159,20 +165,5 @@ class PaymentsController < ApplicationController
         :service_id,
         attachments: []
       ).to_h.symbolize_keys
-  end
-
-  def order_by
-    case params[:order_by]
-    when "expiration_date_asc"
-      { expiration_date: :asc }
-    when "expiration_date_desc"
-      { expiration_date: :desc }
-    when "payment_date_asc"
-      { payment_date: :asc }
-    when "payment_date_desc"
-      { payment_date: :desc }
-    else
-      { expiration_date: :desc }
-    end
   end
 end

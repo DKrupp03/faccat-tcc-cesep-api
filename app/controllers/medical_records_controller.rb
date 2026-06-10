@@ -4,6 +4,12 @@ class MedicalRecordsController < ApplicationController
   before_action(:set_record, only: [ :show, :update, :destroy ])
   before_action(:check_permissions)
 
+  sortable(
+    "date_start_asc" => { date: :asc },
+    "date_start_desc" => { date: :desc },
+    default: { date: :desc }
+  )
+
   def index
     records = @profile.medical_records.includes(:service)
       .with_attached_attachments
@@ -66,11 +72,11 @@ class MedicalRecordsController < ApplicationController
   def check_permissions
     case params[:action]
     when "index", "create"
-      if !User.current.profile.admin? && @profile.therapist_id != User.current.profile_id
+      if !Current.profile.admin? && @profile.therapist_id != Current.profile_id
         render_not_allowed()
       end
     when "update", "destroy", "show"
-      render_not_allowed() if !@record.allowed?
+      authorize_record!(@record)
     end
   end
 
@@ -87,12 +93,10 @@ class MedicalRecordsController < ApplicationController
   end
 
   def filter_params
-    return {} unless params[:medical_records].present?
-
-    params.permit(medical_records: [
+    nested_filter_params(:medical_records, [
       :date_start,
       :date_end
-    ])[:medical_records].to_h.symbolize_keys
+    ])
   end
 
   def record_params
@@ -104,16 +108,5 @@ class MedicalRecordsController < ApplicationController
         :service_id,
         attachments: []
       ).to_h.symbolize_keys
-  end
-
-  def order_by
-    case params[:order_by]
-    when "date_start_asc"
-      { date: :asc }
-    when "date_start_desc"
-      { date: :desc }
-    else
-      { date: :desc }
-    end
   end
 end

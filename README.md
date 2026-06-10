@@ -33,4 +33,4 @@ Este repositório contém apenas o back-end. Ele é consumido pelo [front-end em
 
 ---
 
-> Projeto de TCC. Para o tratamento de dados sensíveis e LGPD, consulte o [SECURITY.md](../SECURITY.md) na raiz do projeto.
+> Projeto de TCC. Para o tratamento de dados sensíveis e LGPD, consulte o [SECURITY.md](./SECURITY.md) na raiz do projeto.

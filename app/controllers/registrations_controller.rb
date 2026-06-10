@@ -61,9 +61,9 @@ class RegistrationsController < Devise::RegistrationsController
 
   def profile_params
     params.require(:user).require(:profile).permit(
-      :name, :email, :gender, :birth, :role, :cpf, :crp, :rg, :phone, :address,
+      :name, :email, :gender, :birth, :cpf, :crp, :rg, :phone, :address,
       :occupation, :marital_status, :education_level, :default_value,
       :extra, :therapist_id, :photo, parent: {}
-    )
+    ).merge(role: :therapist)
   end
 end

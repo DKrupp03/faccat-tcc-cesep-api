@@ -7,7 +7,7 @@ class PasswordsController < Devise::PasswordsController
     if successfully_sent?(resource)
       render_json_success()
     else
-      render_json_errors(resource.errors.map(&:message))
+      render_json_errors(resource.errors)
     end
   end
 
@@ -17,7 +17,7 @@ class PasswordsController < Devise::PasswordsController
     if resource.errors.empty?
       render_json_success()
     else
-      render_json_errors(resource.errors.map(&:message))
+      render_json_errors(resource.errors)
     end
   end
 

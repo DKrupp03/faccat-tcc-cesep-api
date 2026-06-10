@@ -1,4 +1,6 @@
 pt-BR:
+  errors:
+    format: "%{attribute}: %{message}"
   user_mailer:
     set_password_instructions:
       subject: "Bem-vindo! Defina sua senha de acesso"
@@ -12,8 +14,8 @@ pt-BR:
         one: "Perfil"
         other: "Perfis"
       service:
-        one: "Pagamento"
-        other: "Pagamentos"
+        one: "Atendimento"
+        other: "Atendimentos"
       payment:
         one: "Pagamento"
         other: "Pagamentos"
@@ -23,6 +25,41 @@ pt-BR:
       anamnese:
         one: "Anamnese"
         other: "Anamneses"
+    attributes:
+      profile:
+        name: "Nome"
+        email: "E-mail"
+        gender: "Gênero"
+        birth: "Data de nascimento"
+        default_value: "Valor padrão"
+        role: "Tipo de perfil"
+        therapist: "Terapeuta"
+      user:
+        email: "E-mail"
+        password: "Senha"
+        password_confirmation: "Confirmação de senha"
+        reset_password_token: "Token de redefinição"
+      service:
+        datetime_start: "Início"
+        datetime_end: "Término"
+        service_type: "Tipo de atendimento"
+        status: "Situação"
+        patient: "Paciente"
+        therapist: "Terapeuta"
+      payment:
+        value: "Valor"
+        expiration_date: "Vencimento"
+        service: "Atendimento"
+      medical_record:
+        title: "Título"
+        date: "Data"
+        observations: "Observações"
+        service: "Atendimento"
+      anamnese:
+        anamnese_type: "Tipo de anamnese"
+        anamnese_data: "Dados da anamnese"
+        patient: "Paciente"
+        therapist: "Terapeuta"
     errors:
       messages:
         record_invalid: "A validação falhou: %{errors}"

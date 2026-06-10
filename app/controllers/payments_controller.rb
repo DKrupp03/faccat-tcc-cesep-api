@@ -49,7 +49,14 @@ class PaymentsController < ApplicationController
   end
 
   def update
-     if @payment.update(payment_params)
+    remove_ids = params.require(:payment).permit(remove_attachment_ids: [])[:remove_attachment_ids] || []
+    @payment.attachments.where(id: remove_ids).find_each(&:purge) if remove_ids.any?
+
+    attributes = payment_params
+    new_attachments = attributes.delete(:attachments)
+
+    if @payment.update(attributes)
+      @payment.attachments.attach(new_attachments) if new_attachments.present?
       render_json_success({ payment: @payment.show })
     else
       render_json_errors(@payment.errors)

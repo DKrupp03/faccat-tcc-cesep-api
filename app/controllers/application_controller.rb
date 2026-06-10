@@ -20,6 +20,7 @@ class ApplicationController < ActionController::API
   end
 
   def render_json_errors(errors, status: :unprocessable_entity)
+    errors = errors.full_messages if errors.respond_to?(:full_messages)
     render(json: { success: false, errors: errors }, status: status)
   end
 

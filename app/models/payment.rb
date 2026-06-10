@@ -18,7 +18,9 @@ class Payment < ApplicationRecord
 
   def show
     payment = self.attributes
-    payment.store(:attachment_urls, self.attachments.map { |a| rails_blob_url(a) })
+    payment.store(:attachments, self.attachments.map do |a|
+      { id: a.id, name: a.blob.filename.to_s, url: rails_blob_url(a) }
+    end)
     payment.store(:service, self.service&.show)
     payment.store(:status, self.status)
     payment

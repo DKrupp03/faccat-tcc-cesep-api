@@ -4,6 +4,10 @@ service: tcc_cesep1
 # Name of the container image (use your-user/app-name on external registries).
 image: cesep/tcc_cesep1
 
+# Tempo máximo para o app ficar saudável no deploy. Na 1ª vez o db:prepare cria os 4 bancos
+# e roda as migrações antes de iniciar, o que passa dos 30s padrão.
+deploy_timeout: 120
+
 # Deploy to these servers.
 servers:
   web:

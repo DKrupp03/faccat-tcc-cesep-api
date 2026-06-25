@@ -45,7 +45,11 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 18.231.22.133 >> ~/.ssh/known_hosts 2>/dev/null || true
+          # Não verificar a host key (runner é efêmero e o IP é fixo/confiável).
+          printf 'Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile /dev/null\n  LogLevel ERROR\n' > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+          # Fallback (entrada NÃO-hasheada) caso a lib SSH consulte o known_hosts mesmo assim.
+          ssh-keyscan 18.231.22.133 >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Rodar o Kamal (${{ inputs.command }})
         run: kamal ${{ inputs.command }}

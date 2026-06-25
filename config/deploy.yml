@@ -2,12 +2,12 @@
 service: tcc_cesep1
 
 # Name of the container image (use your-user/app-name on external registries).
-image: tcc_cesep1
+image: cesep/tcc_cesep1
 
 # Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
+    - 18.231.22.133   # IP estático do Lightsail (tcc-api)
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -20,42 +20,52 @@ servers:
 #
 # Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
 #
-# proxy:
-#   ssl: true
-#   host: app.example.com
+proxy:
+  ssl: true
+  host: api.cesepfaccat.com.br   # domínio público da API (HTTPS automático via Let's Encrypt)
 
 # Where you keep your container images.
 registry:
-  # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: localhost:5555
-
-  # Needed for authenticated registries.
-  # username: your-user
-
-  # Always use an access token rather than real password when possible.
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
+  # Docker Hub é o padrão quando 'server' é omitido. Crie um repositório PRIVADO 'tcc_cesep1'.
+  username: cesep
+  # A senha é um Access Token do Docker Hub, lido de .kamal/secrets (nunca em texto puro aqui).
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
   secret:
     - RAILS_MASTER_KEY
+    - TCC_CESEP1_DATABASE_PASSWORD
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+    - SMTP_USER_NAME
+    - SMTP_PASSWORD
   clear:
-    # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
-    # When you start using multiple servers, you should split out job processing to a dedicated machine.
+    # Roda o supervisor do Solid Queue dentro do Puma (servidor único).
     SOLID_QUEUE_IN_PUMA: true
 
-    # Set number of processes dedicated to Solid Queue (default: 1)
-    # JOB_CONCURRENCY: 3
+    # Banco PostgreSQL roda como acessório no MESMO servidor (ver 'accessories.db' abaixo).
+    # 'tcc_cesep1-db' é o nome do container do banco na rede interna do Kamal (não precisa trocar).
+    DB_HOST: tcc_cesep1-db
 
-    # Set number of cores available to the application on each server (default: 1).
-    # WEB_CONCURRENCY: 2
+    # Domínio público da API (host authorization). TROQUE.
+    APP_HOST: api.cesepfaccat.com.br
 
-    # Match this to any external database server to configure Active Record correctly
-    # Use tcc_cesep1-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 192.168.0.2
+    # URL do front-end (subdomínio no Amplify). DEVE ser UMA única URL (entra no link dos e-mails). TROQUE.
+    FRONTEND_URL: https://app.cesepfaccat.com.br
 
-    # Log everything from Rails
+    # Remetente dos e-mails (precisa pertencer ao domínio verificado no SES). TROQUE.
+    DEVISE_MAILER_SENDER: noreply@cesepfaccat.com.br
+
+    # Armazenamento de arquivos no Amazon S3.
+    AWS_REGION: sa-east-1
+    AWS_S3_BUCKET: tcc-cesep1-storage-prod   # TROQUE se usou outro nome de bucket
+
+    # Servidor SMTP do Amazon SES (porta 587 por padrão).
+    SMTP_ADDRESS: email-smtp.sa-east-1.amazonaws.com
+
+    # Para ver tudo nos logs, troque para: debug
     # RAILS_LOG_LEVEL: debug
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
@@ -66,10 +76,10 @@ aliases:
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
-# Use a persistent storage volume for sqlite database files and local Active Storage files.
-# Recommended to change this to a mounted volume path that is backed up off server.
-volumes:
-  - "tcc_cesep1_storage:/rails/storage"
+# Sem volumes persistentes: os arquivos vão para o Amazon S3 e o banco é gerenciado (Lightsail/RDS).
+# Se um dia voltar a usar armazenamento local, reative a linha abaixo.
+# volumes:
+#   - "tcc_cesep1_storage:/rails/storage"
 
 
 # Configure the image builder.
@@ -86,30 +96,24 @@ builder:
   #   - GITHUB_TOKEN
   #   - RAILS_MASTER_KEY
 
-# Use a different ssh user than root
-# ssh:
-#   user: app
+# O Lightsail Ubuntu loga como 'ubuntu' (adicionado ao grupo docker na Parte 2.10).
+ssh:
+  user: ubuntu
 
-# Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: valkey/valkey:8
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+# Banco de dados PostgreSQL rodando como acessório no MESMO servidor (mais barato que banco gerenciado).
+# Os dados ficam num diretório no disco do servidor (persistem entre deploys) e há backup diário
+# automático para o S3 (ver app/jobs/database_backup_job.rb + config/recurring.yml).
+accessories:
+  db:
+    image: postgres:15
+    host: 18.231.22.133   # MESMO IP estático do Lightsail (igual ao de 'servers.web')
+    # Publica a porta apenas em localhost (o app acessa pela rede interna do Kamal, não pela internet).
+    port: "127.0.0.1:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: tcc_cesep1
+        POSTGRES_DB: tcc_cesep1_production
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data

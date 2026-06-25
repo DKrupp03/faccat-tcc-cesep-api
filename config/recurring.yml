@@ -13,3 +13,9 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+
+  # Backup diário do banco de dados para o Amazon S3 (ver app/jobs/database_backup_job.rb).
+  # Para fazer backup com mais frequência, troque para algo como "every 6 hours".
+  database_backup:
+    class: DatabaseBackupJob
+    schedule: at 3am every day

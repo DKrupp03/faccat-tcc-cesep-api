@@ -1,0 +1,51 @@
+name: Deploy (Kamal)
+
+# Como usar: aba "Actions" -> "Deploy (Kamal)" -> "Run workflow".
+# Na PRIMEIRA vez, escolha o comando "setup". Nas próximas, use "deploy".
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Comando do Kamal (use 'setup' na primeira vez, depois 'deploy')"
+        type: choice
+        options:
+          - setup
+          - deploy
+        default: setup
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Estes valores vêm dos "Secrets" do repositório (Settings -> Secrets and variables -> Actions).
+      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      TCC_CESEP1_DATABASE_PASSWORD: ${{ secrets.TCC_CESEP1_DATABASE_PASSWORD }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SMTP_USER_NAME: ${{ secrets.SMTP_USER_NAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4.7"
+
+      - name: Instalar o Kamal
+        run: gem install kamal -v 2.10.0
+
+      - name: Preparar o Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configurar a chave SSH do servidor
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 18.231.22.133 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Rodar o Kamal (${{ inputs.command }})
+        run: kamal ${{ inputs.command }}

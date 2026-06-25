@@ -32,3 +32,6 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Ignore local deploy secrets (valores reais dos segredos usados pelo Kamal).
+/.kamal/deploy.env
+

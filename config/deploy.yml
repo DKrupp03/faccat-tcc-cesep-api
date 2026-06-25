@@ -35,7 +35,7 @@ registry:
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
   secret:
-    - RAILS_MASTER_KEY
+    - SECRET_KEY_BASE
     - TCC_CESEP1_DATABASE_PASSWORD
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY

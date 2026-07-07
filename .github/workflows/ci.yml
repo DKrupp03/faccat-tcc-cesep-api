@@ -71,7 +71,16 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev
+        run: |
+          # Repositórios de terceiros (Microsoft/Azure) pré-instalados no runner
+          # às vezes ficam com assinatura inválida e derrubam o apt-get update.
+          # Removemos e toleramos falhas do update; o libpq-dev vem do Ubuntu,
+          # então o passo ainda falha de verdade se ele não puder ser instalado.
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list \
+                     /etc/apt/sources.list.d/azure-cli.list \
+                     /etc/apt/sources.list.d/azure-cli.sources
+          sudo apt-get update || true
+          sudo apt-get install --no-install-recommends -y libpq-dev
 
       - name: Checkout code
         uses: actions/checkout@v5

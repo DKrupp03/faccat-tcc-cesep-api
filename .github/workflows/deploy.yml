@@ -6,11 +6,12 @@ on:
   workflow_dispatch:
     inputs:
       command:
-        description: "Comando do Kamal (use 'setup' na primeira vez, depois 'deploy')"
+        description: "Comando (use 'setup' na 1ª vez, 'deploy' nas próximas, 'logs' para ver os logs)"
         type: choice
         options:
           - setup
           - deploy
+          - logs
         default: setup
 
 jobs:
@@ -52,4 +53,10 @@ jobs:
           ssh-keyscan 18.231.22.133 >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Rodar o Kamal (${{ inputs.command }})
-        run: kamal ${{ inputs.command }}
+        run: |
+          if [ "${{ inputs.command }}" = "logs" ]; then
+            # Despeja as últimas linhas do log de produção e sai (não fica seguindo).
+            kamal app logs --lines 400
+          else
+            kamal ${{ inputs.command }}
+          fi

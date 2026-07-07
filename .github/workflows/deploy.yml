@@ -27,7 +27,7 @@ jobs:
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Instalar Ruby
         uses: ruby/setup-ruby@v1

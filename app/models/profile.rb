@@ -37,10 +37,10 @@ class Profile < ApplicationRecord
     profile.store(:user, self.user)
 
     if list_attributes
-      profile.store(:patients_count, self.patients.count) if self.therapist?
+      profile.store(:patients_count, self.patients.size) if self.therapist?
       profile.store(:therapist, self.therapist) if self.patient?
 
-      profile.store(:services_count, self.services.count)
+      profile.store(:services_count, self.services.size)
       profile.store(:last_service, self.last_service&.datetime_start)
       profile.store(:payment_status, self.payment_status)
     else
@@ -62,7 +62,7 @@ class Profile < ApplicationRecord
   end
 
   def last_service
-    self.services.order(datetime_start: :desc).first
+    @last_service ||= self.services.max_by(&:datetime_start)
   end
 
   def payment_status

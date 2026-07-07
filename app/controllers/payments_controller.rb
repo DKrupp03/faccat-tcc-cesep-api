@@ -12,7 +12,7 @@ class PaymentsController < ApplicationController
   )
 
   def index
-    filtered = Payment.includes(:service)
+    filtered = Payment.includes(service: [ :patient, :therapist, :medical_record, :payment ])
       .with_attached_attachments
       .by_status(filter_params[:status])
       .by_payment_date_start(filter_params[:payment_date_start])

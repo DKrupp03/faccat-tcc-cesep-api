@@ -15,8 +15,8 @@ class ProfilesController < ApplicationController
 
     total_active = profiles.by_active(1).count
 
-    profiles = profiles.includes(:user, :patients, :anamnese, :patient_services,
-        :therapist, :therapist_services)
+    profiles = profiles.includes(:user, :patients, :therapist,
+        patient_services: :payment, therapist_services: :payment)
       .with_attached_photo
       .by_name(filter_params[:name])
       .by_active(filter_params[:active])

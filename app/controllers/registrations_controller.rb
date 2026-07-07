@@ -56,7 +56,7 @@ class RegistrationsController < Devise::RegistrationsController
     user.reset_password_token = hashed
     user.reset_password_sent_at = Time.now.utc
     user.save(validate: false)
-    UserMailer.set_password_instructions(user, raw).deliver_later
+    UserMailer.set_password_instructions(user, raw).deliver_now
   end
 
   def profile_params

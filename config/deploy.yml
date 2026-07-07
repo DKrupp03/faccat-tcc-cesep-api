@@ -66,8 +66,8 @@ env:
     AWS_REGION: sa-east-1
     AWS_S3_BUCKET: tcc-cesep1-storage-prod   # TROQUE se usou outro nome de bucket
 
-    # Servidor SMTP do Amazon SES (porta 587 por padrão).
-    SMTP_ADDRESS: email-smtp.sa-east-1.amazonaws.com
+    # Servidor SMTP do Brevo (porta 587).
+    SMTP_ADDRESS: smtp-relay.brevo.com
 
     # Para ver tudo nos logs, troque para: debug
     # RAILS_LOG_LEVEL: debug

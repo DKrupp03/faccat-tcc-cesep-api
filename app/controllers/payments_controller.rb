@@ -1,4 +1,6 @@
 class PaymentsController < ApplicationController
+  MONTHLY_CHART_MONTHS = 12
+
   before_action(:authenticate_user!)
   before_action(:set_payment, only: [ :show, :update, :destroy ])
   before_action(:check_permissions, except: [ :index, :status_chart, :monthly_chart ])
@@ -12,15 +14,9 @@ class PaymentsController < ApplicationController
   )
 
   def index
-    filtered = Payment.includes(service: [ :patient, :therapist, :medical_record, :payment ])
+    filtered = filtrated_payments
+      .includes(service: [ :patient, :therapist, :medical_record, :payment ])
       .with_attached_attachments
-      .by_status(filter_params[:status])
-      .by_payment_date_start(filter_params[:payment_date_start])
-      .by_payment_date_end(filter_params[:payment_date_end])
-      .by_expiration_date_start(filter_params[:expiration_date_start])
-      .by_expiration_date_end(filter_params[:expiration_date_end])
-      .by_patient_id(filter_params[:patient_id])
-      .allowed
 
     total = Payment.allowed.count
     total_filtered = filtered.count
@@ -79,9 +75,9 @@ class PaymentsController < ApplicationController
     end
   end
 
-  # Distribuição dos pagamentos por status (não é afetada pelos filtros do painel).
+  # Distribuição por status dentro do conjunto filtrado do painel.
   def status_chart
-    payments = Payment.allowed
+    payments = filtrated_payments
 
     status_chart = [ :paid, :overdue, :unpaid ].map do |status|
       { status: status, count: payments.by_status(status).count }
@@ -90,11 +86,12 @@ class PaymentsController < ApplicationController
     render_json_success({ status_chart: status_chart })
   end
 
-  # Pagamentos recebidos x a receber por mês nos últimos 12 meses
-  # (não é afetado pelos filtros do painel).
+  # Pagamentos recebidos x a receber por mês (até 12 meses) dentro do conjunto
+  # filtrado do painel.
   def monthly_chart
-    start_date = Date.current.beginning_of_month.prev_month(11)
-    payments = Payment.allowed.where("expiration_date >= ?", start_date)
+    payments = filtrated_payments
+    start_date, months = monthly_chart_range(payments)
+    payments = payments.where(expiration_date: start_date..)
 
     received = payments.where.not(payment_date: nil)
     to_receive = payments.where(payment_date: nil)
@@ -104,7 +101,7 @@ class PaymentsController < ApplicationController
     to_receive_value = group_by_month(to_receive, :sum)
     to_receive_count = group_by_month(to_receive, :count)
 
-    monthly_chart = (0..11).map do |offset|
+    monthly_chart = (0...months).map do |offset|
       month = start_date.next_month(offset).strftime("%Y-%m")
       {
         month: month,
@@ -120,8 +117,33 @@ class PaymentsController < ApplicationController
 
   private
 
+  # Conjunto filtrado do painel — base comum da listagem e dos gráficos.
+  def filtrated_payments
+    Payment.filtrate(filter_params)
+  end
+
+  # A janela do gráfico mensal acompanha o conjunto filtrado: termina no
+  # vencimento mais recente e recua até o mais antigo, no máximo 12 meses.
+  # Sem resultados, mantém os 12 meses que terminam no mês atual.
+  def monthly_chart_range(payments)
+    last_date = payments.maximum(:expiration_date)
+
+    if last_date.blank?
+      start_date = Date.current.beginning_of_month.prev_month(MONTHLY_CHART_MONTHS - 1)
+      return [ start_date, MONTHLY_CHART_MONTHS ]
+    end
+
+    last_month = last_date.beginning_of_month
+    oldest_month = payments.minimum(:expiration_date).beginning_of_month
+    start_month = [ oldest_month, last_month.prev_month(MONTHLY_CHART_MONTHS - 1) ].max
+
+    months = (last_month.year - start_month.year) * 12 + (last_month.month - start_month.month) + 1
+
+    [ start_month, months ]
+  end
+
   def group_by_month(scope, operation)
-    grouped = scope.group(Arel.sql("DATE_TRUNC('month', expiration_date)"))
+    grouped = scope.group(Arel.sql("DATE_TRUNC('month', payments.expiration_date)"))
     grouped = operation == :sum ? grouped.sum(:value) : grouped.count
     grouped.transform_keys { |date| date.to_date.strftime("%Y-%m") }
   end

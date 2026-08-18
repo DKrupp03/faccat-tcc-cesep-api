@@ -36,23 +36,38 @@ class Payment < ApplicationRecord
     end
   end
 
+  # Aplica de uma vez todos os filtros do painel sobre o escopo permitido.
+  # Listagem e gráficos usam este método para enxergarem o mesmo conjunto.
+  def self.filtrate(filters = {})
+    allowed
+      .by_status(filters[:status])
+      .by_payment_date_start(filters[:payment_date_start])
+      .by_payment_date_end(filters[:payment_date_end])
+      .by_expiration_date_start(filters[:expiration_date_start])
+      .by_expiration_date_end(filters[:expiration_date_end])
+      .by_patient_id(filters[:patient_id])
+  end
+
+  # Os filtros usam condições em hash (e não SQL cru) para que as colunas saiam
+  # qualificadas com a tabela: a listagem faz includes(service: :payment), que
+  # traz "payments" duas vezes para a query e tornaria as colunas ambíguas.
   def self.by_payment_date_start(payment_date_start)
-    return where("payment_date >= ?", payment_date_start) if payment_date_start.present?
+    return where(payment_date: payment_date_start..) if payment_date_start.present?
     all
   end
 
   def self.by_payment_date_end(payment_date_end)
-    return where("payment_date <= ?", payment_date_end) if payment_date_end.present?
+    return where(payment_date: ..payment_date_end) if payment_date_end.present?
     all
   end
 
   def self.by_expiration_date_start(expiration_date_start)
-    return where("expiration_date >= ?", expiration_date_start) if expiration_date_start.present?
+    return where(expiration_date: expiration_date_start..) if expiration_date_start.present?
     all
   end
 
   def self.by_expiration_date_end(expiration_date_end)
-    return where("expiration_date <= ?", expiration_date_end) if expiration_date_end.present?
+    return where(expiration_date: ..expiration_date_end) if expiration_date_end.present?
     all
   end
 
@@ -66,9 +81,9 @@ class Payment < ApplicationRecord
     when :paid
       where.not(payment_date: nil)
     when :overdue
-      where(payment_date: nil).where("expiration_date < ?", Date.current)
+      where(payment_date: nil).where(expiration_date: ...Date.current)
     when :unpaid
-      where(payment_date: nil).where("expiration_date >= ?", Date.current)
+      where(payment_date: nil).where(expiration_date: Date.current..)
     else
       all
     end

@@ -142,8 +142,9 @@ patient_profiles.each do |patient|
     end
 
     service = Service.new(
-      datetime_start: start_time,
-      datetime_end:   end_time,
+      date:           start_time.to_date,
+      start_time:     start_time.strftime("%H:%M"),
+      end_time:       end_time.strftime("%H:%M"),
       observations:   service_observations.sample,
       service_type:   Service.service_types.keys.sample,
       status:         status,

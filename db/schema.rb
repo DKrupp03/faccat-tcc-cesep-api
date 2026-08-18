@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_09_225844) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_18_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -103,17 +103,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_225844) do
     t.index ["therapist_id"], name: "index_profiles_on_therapist_id"
   end
 
+  create_table "service_recurrences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "end_date"
+    t.integer "end_type", default: 0, null: false
+    t.integer "frequency", null: false
+    t.integer "month_day"
+    t.integer "occurrences"
+    t.integer "repeat_interval", default: 1, null: false
+    t.date "start_date", null: false
+    t.datetime "updated_at", null: false
+    t.integer "weekday"
+  end
+
   create_table "services", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.datetime "datetime_end", null: false
-    t.datetime "datetime_start", null: false
+    t.date "date", null: false
+    t.time "end_time", null: false
     t.text "observations"
     t.integer "patient_id", null: false
+    t.integer "recurrence_id"
     t.integer "service_type", null: false
+    t.time "start_time", null: false
     t.integer "status", default: 0, null: false
     t.integer "therapist_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["date", "start_time"], name: "index_services_on_date_and_start_time"
     t.index ["patient_id"], name: "index_services_on_patient_id"
+    t.index ["recurrence_id"], name: "index_services_on_recurrence_id"
     t.index ["therapist_id"], name: "index_services_on_therapist_id"
   end
 
@@ -152,5 +169,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_225844) do
   add_foreign_key "profiles", "profiles", column: "therapist_id"
   add_foreign_key "services", "profiles", column: "patient_id"
   add_foreign_key "services", "profiles", column: "therapist_id"
+  add_foreign_key "services", "service_recurrences", column: "recurrence_id"
   add_foreign_key "users", "profiles"
 end

@@ -4,16 +4,16 @@ class ServicesController < ApplicationController
   before_action(:check_permissions, except: [ :index ])
 
   sortable(
-    "datetime_start_asc" => { datetime_start: :asc },
-    "datetime_start_desc" => { datetime_start: :desc },
-    default: { datetime_start: :desc }
+    "date_asc" => { date: :asc, start_time: :asc },
+    "date_desc" => { date: :desc, start_time: :desc },
+    default: { date: :desc, start_time: :desc }
   )
 
   def index
     services = Service.allowed
     total = services.count
 
-    services = services.includes(:patient, :therapist, :medical_record, :payment)
+    services = services.includes(:patient, :therapist, :medical_record, :payment, :recurrence)
       .by_status(filter_params[:status])
       .by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
@@ -42,6 +42,8 @@ class ServicesController < ApplicationController
   end
 
   def create
+    return create_recurrent if recurrent?
+
     @service = Service.new(service_params)
 
     if @service.save
@@ -52,22 +54,71 @@ class ServicesController < ApplicationController
   end
 
   def update
-     if @service.update(service_params)
-      render_json_success({ service: @service.show })
-     else
-      render_json_errors(@service.errors)
-     end
+    attributes = service_params
+    siblings = @service.recurrence_siblings(scope_param)
+
+    # Fora do escopo "single" a data continua sendo de cada ocorrência: só os
+    # campos comuns são propagados para a série.
+    if siblings.count > 1
+      shared = attributes.slice(*Service::RECURRENCE_SHARED_ATTRIBUTES)
+
+      Service.transaction do
+        siblings.each { |service| service.update!(service == @service ? attributes : shared) }
+      end
+    else
+      @service.update!(attributes)
+    end
+
+    render_json_success({ service: @service.reload.show })
+  rescue ActiveRecord::RecordInvalid => e
+    render_json_errors(e.record.errors)
   end
 
   def destroy
-    if @service.destroy
-      render_json_success({ service: @service.show })
-    else
-      render_json_errors(@service.errors)
+    service = @service.show
+    recurrence = @service.recurrence
+
+    Service.transaction do
+      @service.recurrence_siblings(scope_param).destroy_all
+      recurrence.destroy! if recurrence.present? && recurrence.services.reload.empty?
     end
+
+    render_json_success({ service: service })
+  rescue ActiveRecord::RecordNotDestroyed => e
+    render_json_errors(e.record.errors)
   end
 
   private
+
+  def create_recurrent
+    recurrence = ServiceRecurrence.new(recurrence_params.merge(start_date: service_params[:date]))
+
+    unless recurrence.valid?
+      return render_json_errors(recurrence.errors)
+    end
+
+    services = recurrence.build_services(service_params)
+    invalid = services.find { |service| !service.valid? }
+
+    return render_json_errors(invalid.errors) if invalid.present?
+
+    # Os atendimentos foram montados pela associação, então são salvos junto.
+    recurrence.save!
+
+    @service = services.first
+    render_json_success({ service: @service.show })
+  rescue ActiveRecord::RecordInvalid => e
+    render_json_errors(e.record.errors)
+  end
+
+  def recurrent?
+    ActiveModel::Type::Boolean.new.cast(params.dig(:service, :recurrent))
+  end
+
+  def scope_param
+    scope = params[:scope].to_s
+    Service::RECURRENCE_SCOPES.include?(scope) ? scope : "single"
+  end
 
   def check_permissions
     case params[:action]
@@ -77,7 +128,9 @@ class ServicesController < ApplicationController
         render_not_allowed()
       end
     when "update", "destroy", "show"
-      authorize_record!(@service)
+      # No escopo múltiplo a ação atinge outras ocorrências: todas precisam ser permitidas.
+      unauthorized = @service.recurrence_siblings(scope_param).find { |service| !service.allowed? }
+      authorize_record!(unauthorized || @service)
     end
   end
 
@@ -103,13 +156,30 @@ class ServicesController < ApplicationController
   def service_params
     params.require(:service)
       .permit(
-        :datetime_start,
-        :datetime_end,
+        :date,
+        :start_time,
+        :end_time,
         :observations,
         :service_type,
         :status,
         :patient_id,
         :therapist_id
       ).to_h.symbolize_keys
+  end
+
+  # O padrão da recorrência só é aceito na criação: na edição a série é imutável.
+  def recurrence_params
+    params.require(:service)
+      .permit(recurrence: [
+        :frequency,
+        :repeat_interval,
+        :end_type,
+        :end_date,
+        :occurrences,
+        :weekday,
+        :month_day
+      ])
+      .fetch(:recurrence, {})
+      .to_h.symbolize_keys
   end
 end

@@ -19,6 +19,9 @@ pt-BR:
       payment:
         one: "Pagamento"
         other: "Pagamentos"
+      service_recurrence:
+        one: "Recorrência"
+        other: "Recorrências"
       medical_record:
         one: "Prontuário"
         other: "Prontuários"
@@ -40,12 +43,22 @@ pt-BR:
         password_confirmation: "Confirmação de senha"
         reset_password_token: "Token de redefinição"
       service:
-        datetime_start: "Início"
-        datetime_end: "Término"
+        date: "Data"
+        start_time: "Hora de início"
+        end_time: "Hora de fim"
         service_type: "Tipo de atendimento"
         status: "Situação"
         patient: "Paciente"
         therapist: "Terapeuta"
+      service_recurrence:
+        frequency: "Frequência"
+        repeat_interval: "A cada"
+        start_date: "Início"
+        end_type: "Fim"
+        end_date: "Data fim"
+        occurrences: "Ocorrências"
+        weekday: "Dia da semana"
+        month_day: "Dia do mês"
       payment:
         value: "Valor"
         expiration_date: "Vencimento"
@@ -69,6 +82,10 @@ pt-BR:
         too_short: "É muito curto (mínimo %{count} caracteres)!"
         too_long: "É muito longo (máximo %{count} caracteres)!"
         greater_than_or_equal_to: "Deve ser maior ou igual a %{count}!"
+        greater_than: "Deve ser maior que %{count}!"
+        less_than_or_equal_to: "Deve ser menor ou igual a %{count}!"
+        not_an_integer: "Deve ser um número inteiro!"
+        inclusion: "Não é um valor válido!"
         not_a_number: "Deve ser um número válido!"
         not_found: "%{model} não encontrado!"
         not_allowed: "Acesso não permitido!"
@@ -95,10 +112,19 @@ pt-BR:
               less_than: "Deve ser anterior à data de hoje!"
         service:
           attributes:
-            datetime_start:
-              greater_than_or_equal_to: "Deve ser posterior à data e hora atual!"
-            datetime_end:
-              greater_than: "Deve ser posterior ao início!"
+            date:
+              greater_than_or_equal_to: "Deve ser hoje ou uma data futura!"
+            end_time:
+              greater_than: "Deve ser posterior à hora de início!"
+        service_recurrence:
+          attributes:
+            end_date:
+              greater_than_or_equal_to: "Deve ser igual ou posterior à data de início!"
+            occurrences:
+              less_than_or_equal_to: "A recorrência pode ter no máximo %{count} ocorrências!"
+            base:
+              too_many_occurrences: "A recorrência geraria mais de %{count} atendimentos! Reduza o período ou aumente o intervalo."
+              no_occurrences: "A recorrência não gera nenhum atendimento! Revise as datas informadas."
         payment:
           attributes:
             expiration_date:

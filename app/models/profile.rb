@@ -41,7 +41,7 @@ class Profile < ApplicationRecord
       profile.store(:therapist, self.therapist) if self.patient?
 
       profile.store(:services_count, self.services.size)
-      profile.store(:last_service, self.last_service&.datetime_start)
+      profile.store(:last_service, self.last_service&.starts_at)
       profile.store(:payment_status, self.payment_status)
     else
       profile.store(:patients, self.patients) if self.therapist?
@@ -62,7 +62,7 @@ class Profile < ApplicationRecord
   end
 
   def last_service
-    @last_service ||= self.services.max_by(&:datetime_start)
+    @last_service ||= self.services.max_by { |service| [ service.date, service.start_time ] }
   end
 
   def payment_status
@@ -99,7 +99,7 @@ class Profile < ApplicationRecord
 
     last_services = Service
       .select("DISTINCT ON (patient_id) patient_id, id AS service_id")
-      .order("patient_id, datetime_start DESC")
+      .order("patient_id, services.date DESC, services.start_time DESC")
 
     joined = joins("JOIN (#{last_services.to_sql}) last_svc ON last_svc.patient_id = profiles.id")
              .joins("JOIN payments ON payments.service_id = last_svc.service_id")

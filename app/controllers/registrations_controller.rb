@@ -2,6 +2,8 @@ class RegistrationsController < Devise::RegistrationsController
   respond_to(:json)
 
   def create
+    return create_patient_profile if requested_role == :patient
+
     ActiveRecord::Base.transaction do
       profile = Profile.new(profile_params)
       profile.save!
@@ -32,6 +34,22 @@ class RegistrationsController < Devise::RegistrationsController
   end
 
   private
+
+  # Paciente não acessa o sistema: cria apenas o perfil, sem User e sem e-mail de senha.
+  def create_patient_profile
+    profile = Profile.new(profile_params)
+
+    if profile.save
+      render_json_success({ profile: profile.show(list_attributes: true) })
+    else
+      render_json_errors(profile.errors)
+    end
+  end
+
+  # Só o cadastro público envia role; qualquer valor fora da lista cai em terapeuta.
+  def requested_role
+    params.dig(:user, :profile, :role).to_s == "patient" ? :patient : :therapist
+  end
 
   def respond_with(resource, _opts = {})
     if resource.persisted?
@@ -64,6 +82,6 @@ class RegistrationsController < Devise::RegistrationsController
       :name, :email, :gender, :birth, :cpf, :crp, :rg, :phone, :address,
       :occupation, :marital_status, :education_level, :default_value,
       :extra, :therapist_id, :photo, parent: {}
-    ).merge(role: :therapist)
+    ).merge(role: requested_role)
   end
 end

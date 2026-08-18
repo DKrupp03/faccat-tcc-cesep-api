@@ -7,7 +7,9 @@ class MedicalRecord < ApplicationRecord
   validates(:title, presence: true)
   validates(:date, presence: true)
   validates(:observations, presence: true)
-  validates(:service, uniqueness: true, on: :create)
+  # Sem `on: :create` a duplicata continuava possível trocando o service_id
+  # numa edição (não há índice único no banco até a migration desta correção).
+  validates(:service_id, uniqueness: true)
 
   def show
     record = self.attributes
@@ -27,16 +29,13 @@ class MedicalRecord < ApplicationRecord
   end
 
   def self.allowed(profile = Current.profile)
+    return none if profile.nil?
     return all if profile.admin?
     return joins(:service).where(services: { therapist_id: profile.id }) if profile.therapist?
-    return joins(:service).where(services: { patient_id: profile.id }) if profile.patient?
-    all
+    none
   end
 
   def allowed?(profile = Current.profile)
-    return true if profile.admin?
-    return self.service.therapist_id == profile.id if profile.therapist?
-    return self.service.patient_id == profile.id if profile.patient?
-    true
+    self.class.allowed(profile).exists?(id: self.id)
   end
 end

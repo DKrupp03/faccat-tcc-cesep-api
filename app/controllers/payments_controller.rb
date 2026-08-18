@@ -23,11 +23,7 @@ class PaymentsController < ApplicationController
     total_received = filtered.where.not(payment_date: nil).sum(:value)
     total_to_receive = filtered.where(payment_date: nil).sum(:value)
 
-    payments = filtered.order(order_by)
-
-    if params[:page].present?
-      payments = payments.page(params[:page]).per(params[:per_page] || 30)
-    end
+    payments = paginate(filtered.order(order_by))
 
     render_json_success({
       payments: payments.map(&:show),
@@ -75,9 +71,11 @@ class PaymentsController < ApplicationController
     end
   end
 
-  # Distribuição por status dentro do conjunto filtrado do painel.
+  # Distribuição por status dentro do conjunto filtrado do painel. O próprio
+  # filtro de status fica de fora: com ele, escolher "pago" zerava as outras
+  # duas fatias e o gráfico deixava de dizer qualquer coisa.
   def status_chart
-    payments = filtrated_payments
+    payments = Payment.filtrate(filter_params.except(:status))
 
     status_chart = [ :paid, :overdue, :unpaid ].map do |status|
       { status: status, count: payments.by_status(status).count }
@@ -148,14 +146,17 @@ class PaymentsController < ApplicationController
     grouped.transform_keys { |date| date.to_date.strftime("%Y-%m") }
   end
 
+  # O vínculo do pagamento é o atendimento, então a permissão sai dele. A versão
+  # anterior lia params[:service][:therapist_id], chave que nunca existe no
+  # payload de pagamento — na prática, nenhum não-admin conseguia lançar.
   def check_permissions
     case params[:action]
     when "create"
-      current_profile = Current.profile
-      if !current_profile.admin? && params.dig(:service, :therapist_id) != current_profile.id
-        render_not_allowed()
-      end
-    when "update", "destroy", "show"
+      authorize_association!(Service, payment_params[:service_id])
+    when "update"
+      authorize_record!(@payment) &&
+        authorize_association!(Service, payment_params[:service_id])
+    when "destroy", "show"
       authorize_record!(@payment)
     end
   end
@@ -173,6 +174,8 @@ class PaymentsController < ApplicationController
       :expiration_date_start,
       :expiration_date_end,
       :patient_id,
+      :therapist_id,
+      :payment_method,
       :status
     ])
   end

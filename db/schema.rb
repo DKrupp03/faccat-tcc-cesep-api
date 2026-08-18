@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_18_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_18_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -53,7 +53,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_18_120100) do
     t.index ["anamnese_data"], name: "index_anamneses_on_anamnese_data", using: :gin
     t.index ["anamnese_type"], name: "index_anamneses_on_anamnese_type"
     t.index ["patient_id"], name: "index_anamneses_on_patient_id"
-    t.index ["therapist_id", "patient_id"], name: "index_anamnese_unique", unique: true
+    t.index ["patient_id"], name: "index_anamneses_on_patient_id_unique", unique: true
     t.index ["therapist_id"], name: "index_anamneses_on_therapist_id"
   end
 
@@ -65,6 +65,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_18_120100) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["service_id"], name: "index_medical_records_on_service_id"
+    t.index ["service_id"], name: "index_medical_records_on_service_id_unique", unique: true
   end
 
   create_table "payments", force: :cascade do |t|
@@ -76,6 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_18_120100) do
     t.datetime "updated_at", null: false
     t.decimal "value", precision: 10, scale: 2, null: false
     t.index ["service_id"], name: "index_payments_on_service_id"
+    t.index ["service_id"], name: "index_payments_on_service_id_unique", unique: true
   end
 
   create_table "profiles", force: :cascade do |t|

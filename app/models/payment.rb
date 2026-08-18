@@ -5,14 +5,18 @@ class Payment < ApplicationRecord
   has_many_attached(:attachments)
 
   validates(:value, presence: true, numericality: { greater_than_or_equal_to: 0, allow_nil: true })
+  # O vencimento pode ser passado: a maioria dos pagamentos é lançada depois do
+  # atendimento acontecer, e a trava anterior impedia registrar esse histórico.
   validates(:expiration_date, presence: true)
+  # Recebimento no futuro entraria como "pago" e inflaria os totais e gráficos.
   validates(
-    :expiration_date,
-    comparison: { greater_than_or_equal_to: -> { Date.current } },
-    on: :create,
-    if: -> { expiration_date.present? }
+    :payment_date,
+    comparison: { less_than_or_equal_to: -> { Date.current } },
+    allow_nil: true
   )
-  validates(:service, uniqueness: true, on: :create)
+  # Sem `on: :create` a duplicata continuava possível trocando o service_id
+  # numa edição (não há índice único no banco até a migration desta correção).
+  validates(:service_id, uniqueness: true)
 
   enum(:payment_method, {
     cash: 0,  pix: 1, credit_card: 2, debit_card: 3, bank_slip: 4, bank_transfer: 5
@@ -46,6 +50,8 @@ class Payment < ApplicationRecord
       .by_expiration_date_start(filters[:expiration_date_start])
       .by_expiration_date_end(filters[:expiration_date_end])
       .by_patient_id(filters[:patient_id])
+      .by_therapist_id(filters[:therapist_id])
+      .by_payment_method(filters[:payment_method])
   end
 
   # Os filtros usam condições em hash (e não SQL cru) para que as colunas saiam
@@ -76,6 +82,18 @@ class Payment < ApplicationRecord
     all
   end
 
+  def self.by_therapist_id(therapist_id)
+    return joins(:service).where(services: { therapist_id: therapist_id }) if therapist_id.present?
+    all
+  end
+
+  # Valor fora do enum viraria `payment_method IS NULL` e devolveria os
+  # pagamentos sem forma de pagamento em vez de ignorar o filtro.
+  def self.by_payment_method(payment_method)
+    return all unless payment_methods.key?(payment_method.to_s)
+    where(payment_method: payment_method)
+  end
+
   def self.by_status(status)
     case status&.to_sym
     when :paid
@@ -90,16 +108,13 @@ class Payment < ApplicationRecord
   end
 
   def self.allowed(profile = Current.profile)
+    return none if profile.nil?
     return all if profile.admin?
     return joins(:service).where(services: { therapist_id: profile.id }) if profile.therapist?
-    return joins(:service).where(services: { patient_id: profile.id }) if profile.patient?
-    all
+    none
   end
 
   def allowed?(profile = Current.profile)
-    return true if profile.admin?
-    return self.service.therapist_id == profile.id if profile.therapist?
-    return self.service.patient_id == profile.id if profile.patient?
-    true
+    self.class.allowed(profile).exists?(id: self.id)
   end
 end

@@ -34,6 +34,7 @@ pt-BR:
         email: "E-mail"
         gender: "Gênero"
         birth: "Data de nascimento"
+        cpf: "CPF"
         default_value: "Valor padrão"
         role: "Tipo de perfil"
         therapist: "Terapeuta"
@@ -62,16 +63,21 @@ pt-BR:
       payment:
         value: "Valor"
         expiration_date: "Vencimento"
+        payment_date: "Data de pagamento"
+        payment_method: "Forma de pagamento"
         service: "Atendimento"
+        service_id: "Atendimento"
       medical_record:
         title: "Título"
         date: "Data"
         observations: "Observações"
         service: "Atendimento"
+        service_id: "Atendimento"
       anamnese:
         anamnese_type: "Tipo de anamnese"
         anamnese_data: "Dados da anamnese"
         patient: "Paciente"
+        patient_id: "Paciente"
         therapist: "Terapeuta"
     errors:
       messages:
@@ -90,6 +96,7 @@ pt-BR:
         not_found: "%{model} não encontrado!"
         not_allowed: "Acesso não permitido!"
         taken: "Já utilizado!"
+        invalid_cpf: "CPF inválido!"
       models:
         user:
           attributes:
@@ -108,14 +115,19 @@ pt-BR:
               invalid: "Formato de e-mail inválido!"
             name:
               taken: "Já existe outro perfil com esse nome!"
+            cpf:
+              taken: "Já existe outro perfil com esse CPF!"
             birth:
               less_than: "Deve ser anterior à data de hoje!"
+              greater_than: "Data de nascimento inválida!"
         service:
           attributes:
             date:
               greater_than_or_equal_to: "Deve ser hoje ou uma data futura!"
             end_time:
               greater_than: "Deve ser posterior à hora de início!"
+            base:
+              agenda_conflict: "O terapeuta já tem outro atendimento nesse horário!"
         service_recurrence:
           attributes:
             end_date:
@@ -127,11 +139,16 @@ pt-BR:
               no_occurrences: "A recorrência não gera nenhum atendimento! Revise as datas informadas."
         payment:
           attributes:
-            expiration_date:
-              greater_than_or_equal_to: "Deve ser posterior à data atual!"
-            service:
+            payment_date:
+              less_than_or_equal_to: "A data de pagamento não pode ser futura!"
+            service_id:
               taken: "Já existe um pagamento associado a este serviço!"
         medical_record:
           attributes:
-            service:
+            service_id:
               taken: "Já existe um prontuário associado a este serviço!"
+        anamnese:
+          already_exists: "Este paciente já possui uma anamnese!"
+          attributes:
+            patient_id:
+              taken: "Este paciente já possui uma anamnese!"

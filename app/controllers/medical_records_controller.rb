@@ -11,18 +11,19 @@ class MedicalRecordsController < ApplicationController
   )
 
   def index
-    records = @profile.medical_records.includes(:service)
+    # Parte de MedicalRecord.allowed (que já faz o join com services) em vez da
+    # associação :through do perfil, que gerava um segundo join na mesma tabela.
+    records = MedicalRecord.allowed
+      .joins(:service)
+      .where(services: { patient_id: @profile.id })
+      .includes(:service)
       .with_attached_attachments
       .by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
       .order(order_by)
-      .allowed
 
     total = records.count
-
-    if params[:page].present?
-      records = records.page(params[:page]).per(params[:per_page] || 30)
-    end
+    records = paginate(records)
 
     render_json_success({
       medical_records: records.map(&:show),
@@ -35,7 +36,9 @@ class MedicalRecordsController < ApplicationController
   end
 
   def create
-    @record = @profile.medical_records.new(record_params)
+    # `@profile.medical_records` é has_many :through: construir por ela não
+    # preenche o service_id (que vem do corpo e já foi autorizado acima).
+    @record = MedicalRecord.new(record_params)
 
     if @record.save
       render_json_success({ medical_record: @record.show })
@@ -69,15 +72,36 @@ class MedicalRecordsController < ApplicationController
 
   private
 
+  # Além do vínculo com o paciente da URL, o service_id do corpo precisa apontar
+  # para um atendimento permitido e do próprio paciente — senão o prontuário
+  # nasce pendurado no atendimento de outra pessoa.
   def check_permissions
     case params[:action]
-    when "index", "create"
-      if !Current.profile.admin? && @profile.therapist_id != Current.profile_id
-        render_not_allowed()
-      end
-    when "update", "destroy", "show"
+    when "index"
+      authorize_patient!
+    when "create"
+      authorize_patient! && authorize_service!
+    when "update"
+      authorize_record!(@record) && authorize_service!
+    when "destroy", "show"
       authorize_record!(@record)
     end
+  end
+
+  def authorize_patient!
+    return true if Current.profile.admin? || @profile.therapist_id == Current.profile_id
+
+    render_not_allowed
+    false
+  end
+
+  def authorize_service!
+    service_id = record_params[:service_id]
+    return true if service_id.blank?
+    return true if Service.allowed.exists?(id: service_id, patient_id: @profile.id)
+
+    render_not_allowed
+    false
   end
 
   def set_profile

@@ -12,15 +12,38 @@ class Profile < ApplicationRecord
 
   has_many(:medical_records, through: :patient_services, source: :medical_record)
 
+  MAX_AGE_IN_YEARS = 120
+
+  # O Devise normaliza o e-mail do User; sem o mesmo tratamento aqui, "A@x.com"
+  # passava na unicidade do Profile e estourava no índice único de users.
+  normalizes(:email, with: ->(email) { email.strip.downcase })
+
   validates(:name, presence: true, length: { minimum: 3 })
-  validates(:email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP })
+  validates(
+    :email,
+    presence: true,
+    uniqueness: { case_sensitive: false },
+    format: { with: URI::MailTo::EMAIL_REGEXP }
+  )
   validates(:gender, presence: true)
-  validates(:birth, presence: true, comparison: { less_than: -> { Date.current }, allow_nil: true })
+  validates(
+    :birth,
+    presence: true,
+    comparison: {
+      less_than: -> { Date.current },
+      greater_than: -> { MAX_AGE_IN_YEARS.years.ago.to_date },
+      allow_nil: true
+    }
+  )
+  validates(:cpf, cpf: true, allow_blank: true)
+  validates(:cpf, uniqueness: { case_sensitive: false }, allow_blank: true)
+  # `patient?` (predicado do enum) tolera role nil; `role.to_sym` estourava
+  # NoMethodError antes mesmo da validação de presença de :role rodar.
   validates(
     :default_value,
     numericality: { greater_than_or_equal_to: 0 },
     allow_nil: true,
-    if: -> { role.to_sym == :patient }
+    if: :patient?
   )
   validates(:role, presence: true)
 
@@ -31,20 +54,34 @@ class Profile < ApplicationRecord
     postgraduate: 7, masters: 8, doctorate: 9 })
   enum(:role, { therapist: 0, patient: 1 })
 
+  # Terapeuta enxerga os demais terapeutas apenas para poder selecioná-los
+  # (vínculo do paciente, agendamento). Fora isso o perfil alheio não pode
+  # trafegar completo: CPF, RG, endereço e afins são dado pessoal (LGPD).
+  def visible_in_full?(profile = Current.profile)
+    return true if profile.nil? || profile.admin?
+    self.id == profile.id || self.therapist_id == profile.id
+  end
+
+  def summary
+    self.attributes.slice("id", "name", "role", "active")
+  end
+
   def show(list_attributes: false)
+    return summary unless visible_in_full?
+
     profile = self.attributes
     profile.store(:photo_url, rails_blob_url(self.photo)) if self.photo.attached?
-    profile.store(:user, self.user)
+    profile.store(:user, self.user&.slice(:id, :email, :profile_id))
 
     if list_attributes
       profile.store(:patients_count, self.patients.size) if self.therapist?
-      profile.store(:therapist, self.therapist) if self.patient?
+      profile.store(:therapist, self.therapist&.summary) if self.patient?
 
       profile.store(:services_count, self.services.size)
       profile.store(:last_service, self.last_service&.starts_at)
       profile.store(:payment_status, self.payment_status)
     else
-      profile.store(:patients, self.patients) if self.therapist?
+      profile.store(:patients, self.patients.map(&:summary)) if self.therapist?
       profile.store(:services, self.services)
       profile.store(:photo, self.photo) if self.photo.attached?
       profile.store(:anamnese, self.anamnese) if self.anamnese
@@ -79,9 +116,12 @@ class Profile < ApplicationRecord
     all
   end
 
+  # O painel manda 1 (ativos), 0 (inativos) ou -1 (todos). Filtro ausente ou
+  # vazio significa "todos" — antes caía em `active IS NULL` e zerava a lista.
   def self.by_active(active)
-    return where(active: active) if active.to_i >= 0
-    all
+    return all if active.blank?
+    return all if active.to_i.negative?
+    where(active: active.to_i == 1)
   end
 
   def self.by_therapist_id(therapist_id)
@@ -94,15 +134,21 @@ class Profile < ApplicationRecord
     all
   end
 
+  PAYMENT_STATUS_FILTERS = %w[paid overdue unpaid no_payment].freeze
+
+  # Filtra pelo status do pagamento do último atendimento do paciente. Os JOINs
+  # são LEFT: com INNER, paciente sem atendimento (ou cujo último atendimento
+  # não tem pagamento) sumia da listagem em vez de aparecer como "sem pagamento".
   def self.by_payment_status(payment_status)
     return all if payment_status.blank?
+    return all unless PAYMENT_STATUS_FILTERS.include?(payment_status.to_s)
 
     last_services = Service
       .select("DISTINCT ON (patient_id) patient_id, id AS service_id")
       .order("patient_id, services.date DESC, services.start_time DESC")
 
-    joined = joins("JOIN (#{last_services.to_sql}) last_svc ON last_svc.patient_id = profiles.id")
-             .joins("JOIN payments ON payments.service_id = last_svc.service_id")
+    joined = joins("LEFT JOIN (#{last_services.to_sql}) last_svc ON last_svc.patient_id = profiles.id")
+             .joins("LEFT JOIN payments ON payments.service_id = last_svc.service_id")
 
     case payment_status.to_sym
     when :paid
@@ -115,22 +161,24 @@ class Profile < ApplicationRecord
       joined
         .where(payments: { payment_date: nil })
         .where("payments.expiration_date >= ?", Date.current)
-    else
-      all
+    when :no_payment
+      joined.where(payments: { id: nil })
     end
   end
 
+  # Escopo visível para o perfil autenticado. Só quem acessa o sistema é
+  # terapeuta (paciente não tem login), então o fallback é fechado: perfil
+  # desconhecido não enxerga nada.
   def self.allowed(profile = Current.profile)
+    return none if profile.nil?
     return all if profile.admin?
     return where("role = 0 OR therapist_id = :id", id: profile.id) if profile.therapist?
-    return where(id: profile.id) if profile.patient?
-    all
+    none
   end
 
+  # Derivado de `allowed` para que listagem e acesso a registro nunca discordem
+  # (o index chegou a listar perfis que o show recusava).
   def allowed?(profile = Current.profile)
-    return true if profile.admin?
-    return self.id == profile.id || self.therapist_id == profile.id if profile.therapist?
-    return self.id == profile.id if profile.patient?
-    true
+    self.class.allowed(profile).exists?(id: self.id)
   end
 end

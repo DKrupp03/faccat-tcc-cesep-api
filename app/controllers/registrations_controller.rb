@@ -77,11 +77,23 @@ class RegistrationsController < Devise::RegistrationsController
     UserMailer.set_password_instructions(user, raw).deliver_now
   end
 
+  PUBLIC_ATTRIBUTES = [
+    :name, :email, :gender, :birth, :cpf, :crp, :rg, :phone, :address,
+    :occupation, :marital_status, :education_level, :photo
+  ].freeze
+  # Só o admin cadastra vínculo, situação e a própria flag de admin — os dois
+  # últimos, antes, eram silenciosamente ignorados mesmo vindos do painel.
+  ADMIN_ATTRIBUTES = [ :admin, :active, :therapist_id, :default_value, :extra ].freeze
+
+  # O mesmo endpoint atende o cadastro público (sem sessão) e a criação de
+  # terapeuta pelo painel. Sem separar os campos, um visitante anônimo podia
+  # pendurar um paciente na agenda de qualquer terapeuta.
   def profile_params
-    params.require(:user).require(:profile).permit(
-      :name, :email, :gender, :birth, :cpf, :crp, :rg, :phone, :address,
-      :occupation, :marital_status, :education_level, :default_value,
-      :extra, :therapist_id, :photo, parent: {}
-    ).merge(role: requested_role)
+    attributes = PUBLIC_ATTRIBUTES
+    attributes += ADMIN_ATTRIBUTES if current_user&.profile&.admin?
+
+    params.require(:user).require(:profile)
+      .permit(*attributes, parent: {})
+      .merge(role: requested_role)
   end
 end

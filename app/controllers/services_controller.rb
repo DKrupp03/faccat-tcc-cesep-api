@@ -25,10 +25,7 @@ class ServicesController < ApplicationController
       .order(order_by)
 
     total_filtered = services.count
-
-    if params[:page].present?
-      services = services.page(params[:page]).per(params[:per_page] || 30)
-    end
+    services = paginate(services)
 
     render_json_success({
       services: services.map(&:show),
@@ -120,18 +117,44 @@ class ServicesController < ApplicationController
     Service::RECURRENCE_SCOPES.include?(scope) ? scope : "single"
   end
 
+  # Os ids de paciente e terapeuta vêm do corpo da requisição: sem conferi-los
+  # contra o escopo permitido, dava para agendar com o paciente de outro
+  # terapeuta (e receber o perfil dele serializado na resposta).
   def check_permissions
     case params[:action]
     when "create"
-      current_profile = Current.profile
-      if !current_profile.admin? && params.dig(:service, :therapist_id) != current_profile.id
-        render_not_allowed()
-      end
-    when "update", "destroy", "show"
-      # No escopo múltiplo a ação atinge outras ocorrências: todas precisam ser permitidas.
-      unauthorized = @service.recurrence_siblings(scope_param).find { |service| !service.allowed? }
-      authorize_record!(unauthorized || @service)
+      authorize_participants!
+    when "update"
+      authorize_siblings! && authorize_participants!
+    when "destroy", "show"
+      authorize_siblings!
     end
+  end
+
+  # Paciente precisa estar no escopo permitido; terapeuta, ser o próprio
+  # usuário — só o admin agenda em nome de outro profissional.
+  def authorize_participants!
+    attributes = service_params
+    patient_id = attributes[:patient_id]
+    therapist_id = attributes[:therapist_id]
+
+    return false unless authorize_association!(Profile.patient, patient_id)
+
+    if !Current.profile.admin? && therapist_id.present? && therapist_id.to_i != Current.profile_id
+      render_not_allowed
+      return false
+    end
+
+    true
+  end
+
+  # No escopo múltiplo a ação atinge outras ocorrências: todas precisam ser permitidas.
+  def authorize_siblings!
+    unauthorized = @service.recurrence_siblings(scope_param).find { |service| !service.allowed? }
+    return true if unauthorized.nil? && @service.allowed?
+
+    render_not_allowed
+    false
   end
 
   def set_service

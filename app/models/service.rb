@@ -6,6 +6,8 @@ class Service < ApplicationRecord
   RECURRENCE_SHARED_ATTRIBUTES = [
     :patient_id, :therapist_id, :service_type, :status, :observations, :start_time, :end_time
   ].freeze
+  # Situações que liberam o horário na agenda do terapeuta.
+  RELEASED_STATUSES = %w[no_show cancelled].freeze
 
   belongs_to(:patient, class_name: "Profile")
   belongs_to(:therapist, class_name: "Profile")
@@ -25,6 +27,7 @@ class Service < ApplicationRecord
   validates(:end_time, presence: true, comparison: { greater_than: :start_time }, if: -> { start_time.present? })
   validates(:service_type, presence: true)
   validates(:status, presence: true)
+  validate(:therapist_agenda_is_free)
 
   enum(:status, { scheduled: 0, confirmed: 1, attended: 2, no_show: 3, cancelled: 4 })
   enum(:service_type, {
@@ -48,8 +51,10 @@ class Service < ApplicationRecord
     # convertidas de fuso pelo navegador; por isso a hora vai como "HH:MM".
     service["start_time"] = self.start_time&.strftime("%H:%M")
     service["end_time"] = self.end_time&.strftime("%H:%M")
-    service.store(:patient, self.patient)
-    service.store(:therapist, self.therapist)
+    # Só id/nome: o painel exibe o nome, e o perfil completo traria CPF, RG e
+    # endereço de pessoas que o solicitante não necessariamente pode ver.
+    service.store(:patient, self.patient&.summary)
+    service.store(:therapist, self.therapist&.summary)
     service.store(:medical_record, self.medical_record)
     service.store(:payment, self.payment)
     service.store(:recurrence, self.recurrence&.show)
@@ -95,14 +100,16 @@ class Service < ApplicationRecord
     all
   end
 
+  # Valor fora do enum vira `coluna IS NULL` no Rails e devolveria lista vazia
+  # sem erro; aqui o filtro desconhecido é simplesmente ignorado.
   def self.by_service_type(service_type)
-    return where(service_type: service_type) if service_type.present?
-    all
+    return all unless service_types.key?(service_type.to_s)
+    where(service_type: service_type)
   end
 
   def self.by_status(status)
-    return where(status: status) if status.present?
-    all
+    return all unless statuses.key?(status.to_s)
+    where(status: status)
   end
 
   def self.without_payment(without_payment)
@@ -116,16 +123,30 @@ class Service < ApplicationRecord
   end
 
   def self.allowed(profile = Current.profile)
+    return none if profile.nil?
     return all if profile.admin?
-    return by_therapist_id(profile.id) if profile.therapist?
-    return by_patient_id(profile.id) if profile.patient?
-    all
+    return where(therapist_id: profile.id) if profile.therapist?
+    none
   end
 
   def allowed?(profile = Current.profile)
-    return true if profile.admin?
-    return self.therapist_id == profile.id if profile.therapist?
-    return self.patient_id == profile.id if profile.patient?
-    true
+    self.class.allowed(profile).exists?(id: self.id)
+  end
+
+  private
+
+  # Impede dois atendimentos sobrepostos para o mesmo terapeuta no mesmo dia.
+  # Sobreposição = um começa antes de o outro terminar, nos dois sentidos.
+  def therapist_agenda_is_free
+    return if therapist_id.blank? || date.blank? || start_time.blank? || end_time.blank?
+    return if RELEASED_STATUSES.include?(status.to_s)
+
+    conflicting = Service
+      .where(therapist_id: therapist_id, date: date)
+      .where.not(status: RELEASED_STATUSES)
+      .where("start_time < ? AND end_time > ?", end_time, start_time)
+    conflicting = conflicting.where.not(id: id) if persisted?
+
+    errors.add(:base, :agenda_conflict) if conflicting.exists?
   end
 end

@@ -9,7 +9,9 @@ class AnamnesesController < ApplicationController
   end
 
   def create
-    @anamnese = @profile.build_anamnese(anamnese_params)
+    return render_json_errors(I18n.t("activerecord.errors.models.anamnese.already_exists")) if @profile.anamnese
+
+    @anamnese = @profile.build_anamnese(anamnese_params.merge(therapist_id: Current.profile_id))
 
     if @anamnese.save
       render_json_success({ anamnese: @anamnese.show })
@@ -31,8 +33,8 @@ class AnamnesesController < ApplicationController
   def check_permissions
     case params[:action]
     when "create"
-      if !Current.profile.admin? && @profile.therapist_id != Current.profile_id
-        render_not_allowed()
+      unless Current.profile.admin? || @profile.therapist_id == Current.profile_id
+        render_not_allowed
       end
     when "update", "show"
       authorize_record!(@anamnese)
@@ -51,13 +53,13 @@ class AnamnesesController < ApplicationController
     render_not_found(Anamnese) if @anamnese.nil?
   end
 
+  # patient_id vem da URL (associação) e therapist_id da sessão: aceitá-los do
+  # corpo só permitiria pendurar a anamnese em outra pessoa.
   def anamnese_params
     params.require(:anamnese)
       .permit(
         :anamnese_type,
         :observations,
-        :patient_id,
-        :therapist_id,
         anamnese_data: {}
       ).to_h.symbolize_keys
   end

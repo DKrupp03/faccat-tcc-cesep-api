@@ -29,14 +29,34 @@ class ApplicationController < ActionController::API
 
   def render_not_allowed
     render_json_errors(
-      I18n.t("activerecord.errors.messages.not_allowed")
+      I18n.t("activerecord.errors.messages.not_allowed"),
+      status: :forbidden
     )
   end
 
   def render_not_found(model)
     render_json_errors(
-      I18n.t("activerecord.errors.messages.not_found", model: model.model_name.human)
+      I18n.t("activerecord.errors.messages.not_found", model: model.model_name.human),
+      status: :not_found
     )
+  end
+
+  DEFAULT_PER_PAGE = 30
+  MAX_PER_PAGE = 100
+
+  # Pagina quando params[:page] veio; sem isso a listagem volta inteira
+  # (o calendário de atendimentos depende desse comportamento).
+  def paginate(scope)
+    return scope if params[:page].blank?
+    scope.page(params[:page]).per(per_page)
+  end
+
+  # Teto para o per_page: sem limite, um `per_page=100000` derruba a resposta.
+  def per_page
+    requested = params[:per_page].to_i
+    return DEFAULT_PER_PAGE if requested <= 0
+
+    [ requested, MAX_PER_PAGE ].min
   end
 
   # Permite e normaliza filtros aninhados sob params[key] (ex.: params[:payments]).

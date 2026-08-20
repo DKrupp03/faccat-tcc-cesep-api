@@ -20,6 +20,10 @@ Rails.application.routes.draw do
         passwords: "passwords"
       }
     )
+
+    # Reidratação da sessão: o front lê o usuário atual a partir do cookie JWT,
+    # já que o token não fica mais acessível ao JavaScript.
+    get("me", to: "current_user#show")
   end
 
   resources(:profiles, only: [ :index, :show, :create, :update, :destroy ]) do

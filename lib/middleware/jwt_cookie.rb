@@ -13,6 +13,15 @@ class JwtCookie
   XSRF_TOKEN = "XSRF-TOKEN".freeze
   CSRF_SAFE_METHODS = %w[GET HEAD OPTIONS].freeze
 
+  # Rotas do Devise que ABREM ou ENCERRAM a sessão. Ficam fora do double-submit
+  # porque não podem depender do token da sessão anterior: quando o navegador
+  # guarda um cookie que o front não consegue ler (emitido para outro domínio,
+  # por exemplo), o usuário fica trancado — o login volta 403 e o logout também,
+  # sem saída pela interface.
+  # O risco residual é login/logout forjado (incômodo, não vazamento): toda ação
+  # sobre dado do sistema continua exigindo o header.
+  CSRF_EXEMPT_PATHS = %w[/login /logout /password].freeze
+
   # Deve acompanhar jwt.expiration_time em config/initializers/devise.rb.
   MAX_AGE = 1.day.to_i
 
@@ -46,6 +55,7 @@ class JwtCookie
   # Retorna a resposta 403 (rack triple) quando viola; nil quando ok.
   def csrf_forbidden_response(env)
     return nil if CSRF_SAFE_METHODS.include?(env["REQUEST_METHOD"])
+    return nil if csrf_exempt_path?(env["PATH_INFO"])
 
     req = Rack::Request.new(env)
     return nil if req.cookies[ACCESS_TOKEN].blank?
@@ -57,6 +67,14 @@ class JwtCookie
 
     body = { success: false, errors: [ I18n.t("activerecord.errors.messages.not_allowed") ] }.to_json
     [ 403, { "Content-Type" => "application/json" }, [ body ] ]
+  end
+
+  # Normaliza barra final e extensão de formato ("/login.json") para que uma
+  # variação da rota não recaia na trava que a isenção existe para evitar.
+  def csrf_exempt_path?(path)
+    return false if path.blank?
+
+    CSRF_EXEMPT_PATHS.include?(path.sub(/\.[a-z]+\z/i, "").chomp("/"))
   end
 
   # Entrada: sem header Authorization, usa o cookie para autenticar via warden.

@@ -78,27 +78,50 @@ class JwtCookie
     token = auth.sub(/\ABearer /i, "")
     response.headers.delete("Authorization")
 
+    # O access_token continua host-only (sem domínio): ele só precisa voltar para
+    # a própria API. Já o cookie de CSRF precisa ser LIDO pelo JavaScript do
+    # front — ver cookie_domain.
     set_cookie(response, ACCESS_TOKEN, token, http_only: true)
-    set_cookie(response, XSRF_TOKEN, SecureRandom.urlsafe_base64(32), http_only: false)
+
+    # Sessões abertas antes do COOKIE_DOMAIN guardam um XSRF-TOKEN host-only.
+    # Ele conviveria com o novo (nome igual, escopo diferente) e, por ser mais
+    # antigo, viria primeiro no header Cookie — o Rack lê só a primeira
+    # ocorrência e compararia o valor obsoleto. Expira o legado no login.
+    response.delete_cookie(XSRF_TOKEN, path: "/") if cookie_domain
+
+    set_cookie(response, XSRF_TOKEN, SecureRandom.urlsafe_base64(32),
+      http_only: false, domain: cookie_domain)
   end
 
   # Saída do DELETE /logout: expira os cookies (o warden já revogou o jti).
+  # O domínio precisa bater com o da emissão: um delete host-only não apaga um
+  # cookie emitido no domínio-pai, e a sessão ficaria com o XSRF-TOKEN antigo.
   def clear_on_logout(request, response)
     return unless request.delete? && request.path == "/logout" && response.status < 400
 
     response.delete_cookie(ACCESS_TOKEN, path: "/")
-    response.delete_cookie(XSRF_TOKEN, path: "/")
+    response.delete_cookie(XSRF_TOKEN, path: "/", domain: cookie_domain)
   end
 
-  def set_cookie(response, name, value, http_only:)
+  def set_cookie(response, name, value, http_only:, domain: nil)
     response.set_cookie(name, {
       value: value,
       path: "/",
+      domain: domain,
       httponly: http_only,
       secure: Rails.env.production?,
       same_site: same_site,
       max_age: MAX_AGE
     })
+  end
+
+  # Domínio-pai do cookie de CSRF (ex.: "cesepfaccat.com.br"). Sem ele o cookie
+  # nasce host-only na API e, em produção, o front (app.*) não consegue lê-lo
+  # para ecoar o header X-XSRF-TOKEN — toda requisição mutante voltava 403.
+  # Vazio em desenvolvimento: front e API são "localhost" para o cookie (a porta
+  # não faz parte do escopo), então host-only já cobre os dois.
+  def cookie_domain
+    ENV["COOKIE_DOMAIN"].presence
   end
 
   # Lax quando front e API são same-site (default). Use None (com Secure) apenas

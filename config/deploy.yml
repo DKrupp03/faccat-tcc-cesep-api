@@ -59,6 +59,12 @@ env:
     # URL do front-end (subdomínio no Amplify). DEVE ser UMA única URL (entra no link dos e-mails). TROQUE.
     FRONTEND_URL: https://app.cesepfaccat.com.br
 
+    # Domínio-pai comum ao front (app.*) e à API (api.*). Sem ele o cookie
+    # XSRF-TOKEN fica preso à API e o front não consegue lê-lo para ecoar o
+    # header X-XSRF-TOKEN — todo POST/PUT/DELETE volta 403. TROQUE junto com os
+    # domínios acima (sem "app."/"api." na frente).
+    COOKIE_DOMAIN: cesepfaccat.com.br
+
     # Remetente dos e-mails (precisa pertencer ao domínio verificado no SES). TROQUE.
     DEVISE_MAILER_SENDER: noreply@cesepfaccat.com.br
 

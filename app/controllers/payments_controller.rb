@@ -188,6 +188,7 @@ class PaymentsController < ApplicationController
         :payment_date,
         :payment_method,
         :service_id,
+        :observations,
         attachments: []
       ).to_h.symbolize_keys
   end

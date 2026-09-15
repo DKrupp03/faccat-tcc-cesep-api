@@ -6,7 +6,7 @@ class MedicalRecord < ApplicationRecord
 
   validates(:title, presence: true)
   validates(:date, presence: true)
-  validates(:observations, presence: true)
+  validates(:evolution, presence: true)
   # Sem `on: :create` a duplicata continuava possível trocando o service_id
   # numa edição (não há índice único no banco até a migration desta correção).
   validates(:service_id, uniqueness: true)

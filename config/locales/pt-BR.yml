@@ -70,7 +70,9 @@ pt-BR:
       medical_record:
         title: "Título"
         date: "Data"
-        observations: "Observações"
+        evolution: "Evolução do atendimento"
+        documentary_record: "Registro documental"
+        supervision_record: "Registros da supervisão"
         service: "Atendimento"
         service_id: "Atendimento"
       anamnese:

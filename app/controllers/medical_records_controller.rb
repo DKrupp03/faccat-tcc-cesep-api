@@ -128,7 +128,9 @@ class MedicalRecordsController < ApplicationController
       .permit(
         :title,
         :date,
-        :observations,
+        :evolution,
+        :documentary_record,
+        :supervision_record,
         :service_id,
         attachments: []
       ).to_h.symbolize_keys

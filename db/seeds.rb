@@ -123,6 +123,22 @@ progress_observations = [
   "Paciente relatou boa aplicação das técnicas aprendidas no cotidiano."
 ]
 
+documentary_records = [
+  "Termo de consentimento revisado e assinado.",
+  "Registro de tarefa de casa entregue pelo paciente.",
+  "Escala de ansiedade aplicada e anexada ao prontuário.",
+  "Encaminhamento para avaliação psiquiátrica emitido.",
+  "Sem documentos adicionais nesta sessão."
+]
+
+supervision_records = [
+  "Caso discutido em supervisão; manter plano terapêutico atual.",
+  "Supervisor sugeriu reforçar técnicas de exposição gradual.",
+  "Orientação para investigar histórico familiar nas próximas sessões.",
+  "Discutida a resistência do paciente e estratégias de vínculo.",
+  "Sem apontamentos da supervisão nesta semana."
+]
+
 # ─── Atendimentos, Pagamentos e Prontuários ────────────────────────────────────
 
 patient_profiles.each do |patient|
@@ -168,10 +184,12 @@ patient_profiles.each do |patient|
     next unless status == :attended
 
     MedicalRecord.create!(
-      title:        progress_titles.sample,
-      date:         start_time.to_date,
-      observations: progress_observations.sample,
-      service:      service
+      title:              progress_titles.sample,
+      date:               start_time.to_date,
+      evolution:          progress_observations.sample,
+      documentary_record: documentary_records.sample,
+      supervision_record: supervision_records.sample,
+      service:            service
     )
   end
 end

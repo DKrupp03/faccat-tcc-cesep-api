@@ -4,14 +4,15 @@ class Service < ApplicationRecord
   # Campos propagados para as demais ocorrências quando o escopo não é "single"
   # (a data é sempre individual de cada ocorrência).
   RECURRENCE_SHARED_ATTRIBUTES = [
-    :patient_id, :therapist_id, :service_type, :status, :observations, :start_time, :end_time
+    :patient_id, :therapist_id, :room_id, :service_type, :status, :observations, :start_time, :end_time
   ].freeze
-  # Situações que liberam o horário na agenda do terapeuta.
+  # Situações que liberam o horário na agenda do terapeuta (e na sala).
   RELEASED_STATUSES = %w[no_show cancelled].freeze
 
   belongs_to(:patient, class_name: "Profile")
   belongs_to(:therapist, class_name: "Profile")
   belongs_to(:recurrence, class_name: "ServiceRecurrence", optional: true)
+  belongs_to(:room, optional: true)
   has_one(:medical_record, dependent: :destroy)
   has_one(:payment, dependent: :destroy)
 
@@ -28,6 +29,7 @@ class Service < ApplicationRecord
   validates(:service_type, presence: true)
   validates(:status, presence: true)
   validate(:therapist_agenda_is_free)
+  validate(:room_is_free)
 
   enum(:status, { scheduled: 0, confirmed: 1, attended: 2, no_show: 3, cancelled: 4 })
   enum(:service_type, {
@@ -58,6 +60,7 @@ class Service < ApplicationRecord
     service.store(:medical_record, self.medical_record)
     service.store(:payment, self.payment)
     service.store(:recurrence, self.recurrence&.show)
+    service.store(:room, self.room&.show)
     service
   end
 
@@ -148,5 +151,20 @@ class Service < ApplicationRecord
     conflicting = conflicting.where.not(id: id) if persisted?
 
     errors.add(:base, :agenda_conflict) if conflicting.exists?
+  end
+
+  # Mesma regra de sobreposição, agora para a sala: dois atendimentos não
+  # ocupam a mesma sala no mesmo dia e horário, seja qual for o terapeuta.
+  def room_is_free
+    return if room_id.blank? || date.blank? || start_time.blank? || end_time.blank?
+    return if RELEASED_STATUSES.include?(status.to_s)
+
+    conflicting = Service
+      .where(room_id: room_id, date: date)
+      .where.not(status: RELEASED_STATUSES)
+      .where("start_time < ? AND end_time > ?", end_time, start_time)
+    conflicting = conflicting.where.not(id: id) if persisted?
+
+    errors.add(:base, :room_conflict) if conflicting.exists?
   end
 end

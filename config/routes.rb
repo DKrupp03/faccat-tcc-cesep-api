@@ -33,6 +33,13 @@ Rails.application.routes.draw do
 
   resources(:services, only: [ :index, :show, :create, :update, :destroy ])
 
+  # A modal de salas envia a lista inteira de uma vez (ver RoomsController#sync).
+  resources(:rooms, only: [ :index ]) do
+    collection do
+      put :sync
+    end
+  end
+
   resources(:payments, only: [ :index, :show, :create, :update, :destroy ]) do
     collection do
       get :status_chart

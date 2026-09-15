@@ -13,7 +13,7 @@ class ServicesController < ApplicationController
     services = Service.allowed
     total = services.count
 
-    services = services.includes(:patient, :therapist, :medical_record, :payment, :recurrence)
+    services = services.includes(:patient, :therapist, :medical_record, :payment, :recurrence, :room)
       .by_status(filter_params[:status])
       .by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
@@ -182,7 +182,8 @@ class ServicesController < ApplicationController
         :service_type,
         :status,
         :patient_id,
-        :therapist_id
+        :therapist_id,
+        :room_id
       ).to_h.symbolize_keys
   end
 

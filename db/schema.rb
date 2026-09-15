@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -111,6 +111,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_170000) do
     t.index ["therapist_id"], name: "index_profiles_on_therapist_id"
   end
 
+  create_table "rooms", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_rooms_on_name", unique: true
+  end
+
   create_table "service_recurrences", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "end_date"
@@ -131,6 +138,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_170000) do
     t.text "observations"
     t.integer "patient_id", null: false
     t.integer "recurrence_id"
+    t.integer "room_id"
     t.integer "service_type", null: false
     t.time "start_time", null: false
     t.integer "status", default: 0, null: false
@@ -139,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_170000) do
     t.index ["date", "start_time"], name: "index_services_on_date_and_start_time"
     t.index ["patient_id"], name: "index_services_on_patient_id"
     t.index ["recurrence_id"], name: "index_services_on_recurrence_id"
+    t.index ["room_id"], name: "index_services_on_room_id"
     t.index ["therapist_id"], name: "index_services_on_therapist_id"
   end
 
@@ -178,6 +187,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_170000) do
   add_foreign_key "profiles", "profiles", column: "therapist_id"
   add_foreign_key "services", "profiles", column: "patient_id"
   add_foreign_key "services", "profiles", column: "therapist_id"
+  add_foreign_key "services", "rooms", on_delete: :nullify
   add_foreign_key "services", "service_recurrences", column: "recurrence_id"
   add_foreign_key "users", "profiles"
 end

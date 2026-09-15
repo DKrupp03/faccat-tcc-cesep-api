@@ -28,6 +28,9 @@ pt-BR:
       anamnese:
         one: "Anamnese"
         other: "Anamneses"
+      room:
+        one: "Sala"
+        other: "Salas"
     attributes:
       profile:
         name: "Nome"
@@ -52,6 +55,9 @@ pt-BR:
         status: "Situação"
         patient: "Paciente"
         therapist: "Terapeuta"
+        room: "Sala"
+      room:
+        name: "Nome"
       service_recurrence:
         frequency: "Frequência"
         repeat_interval: "A cada"
@@ -136,6 +142,11 @@ pt-BR:
               greater_than: "Deve ser posterior à hora de início!"
             base:
               agenda_conflict: "O terapeuta já tem outro atendimento nesse horário!"
+              room_conflict: "A sala selecionada já está ocupada com outro atendimento no mesmo dia e horário!"
+        room:
+          attributes:
+            name:
+              taken: "Já existe outra sala com esse nome!"
         service_recurrence:
           attributes:
             end_date:

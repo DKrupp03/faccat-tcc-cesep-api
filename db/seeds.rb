@@ -169,16 +169,21 @@ patient_profiles.each do |patient|
     )
     service.save!(validate: false)
 
+    free_session = rand < 0.1
     paid_session = [ true, true, false ].sample
     expiration   = start_time.to_date + rand(1..15).days
 
-    payment = Payment.new(
-      value:           Faker::Commerce.price(range: 100.0..300.0),
-      expiration_date: expiration,
-      payment_date:    paid_session ? expiration - rand(0..5).days : nil,
-      payment_method:  Payment.payment_methods.keys.sample,
-      service:         service
-    )
+    payment = if free_session
+      Payment.new(free: true, service: service)
+    else
+      Payment.new(
+        value:           Faker::Commerce.price(range: 100.0..300.0),
+        expiration_date: expiration,
+        payment_date:    paid_session ? expiration - rand(0..5).days : nil,
+        payment_method:  Payment.payment_methods.keys.sample,
+        service:         service
+      )
+    end
     payment.save!(validate: false)
 
     next unless status == :attended

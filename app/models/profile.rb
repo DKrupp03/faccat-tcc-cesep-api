@@ -134,7 +134,7 @@ class Profile < ApplicationRecord
     all
   end
 
-  PAYMENT_STATUS_FILTERS = %w[paid overdue unpaid no_payment].freeze
+  PAYMENT_STATUS_FILTERS = %w[paid overdue unpaid free no_payment].freeze
 
   # Filtra pelo status do pagamento do último atendimento do paciente. Os JOINs
   # são LEFT: com INNER, paciente sem atendimento (ou cujo último atendimento
@@ -152,15 +152,19 @@ class Profile < ApplicationRecord
 
     case payment_status.to_sym
     when :paid
-      joined.where.not(payments: { payment_date: nil })
+      joined
+        .where(payments: { free: false })
+        .where.not(payments: { payment_date: nil })
     when :overdue
       joined
-        .where(payments: { payment_date: nil })
+        .where(payments: { free: false, payment_date: nil })
         .where("payments.expiration_date < ?", Date.current)
     when :unpaid
       joined
-        .where(payments: { payment_date: nil })
+        .where(payments: { free: false, payment_date: nil })
         .where("payments.expiration_date >= ?", Date.current)
+    when :free
+      joined.where(payments: { free: true })
     when :no_payment
       joined.where(payments: { id: nil })
     end

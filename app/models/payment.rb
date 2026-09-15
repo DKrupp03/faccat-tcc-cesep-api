@@ -4,10 +4,14 @@ class Payment < ApplicationRecord
   belongs_to(:service)
   has_many_attached(:attachments)
 
-  validates(:value, presence: true, numericality: { greater_than_or_equal_to: 0, allow_nil: true })
+  # Gratuito não tem cobrança: os campos de cobrança são descartados aqui (e não
+  # só no front) para não sobrar valor ou vencimento de antes da troca.
+  before_validation(:clear_charge_fields, if: :free?)
+
+  validates(:value, presence: { unless: :free? }, numericality: { greater_than_or_equal_to: 0, allow_nil: true })
   # O vencimento pode ser passado: a maioria dos pagamentos é lançada depois do
   # atendimento acontecer, e a trava anterior impedia registrar esse histórico.
-  validates(:expiration_date, presence: true)
+  validates(:expiration_date, presence: true, unless: :free?)
   # Recebimento no futuro entraria como "pago" e inflaria os totais e gráficos.
   validates(
     :payment_date,
@@ -31,7 +35,9 @@ class Payment < ApplicationRecord
   end
 
   def status
-    if self.payment_date.present?
+    if self.free?
+      :free
+    elsif self.payment_date.present?
       :paid
     elsif self.expiration_date.present? && self.expiration_date < Date.current
       :overdue
@@ -97,11 +103,13 @@ class Payment < ApplicationRecord
   def self.by_status(status)
     case status&.to_sym
     when :paid
-      where.not(payment_date: nil)
+      where(free: false).where.not(payment_date: nil)
     when :overdue
-      where(payment_date: nil).where(expiration_date: ...Date.current)
+      where(free: false, payment_date: nil).where(expiration_date: ...Date.current)
     when :unpaid
-      where(payment_date: nil).where(expiration_date: Date.current..)
+      where(free: false, payment_date: nil).where(expiration_date: Date.current..)
+    when :free
+      where(free: true)
     else
       all
     end
@@ -116,5 +124,14 @@ class Payment < ApplicationRecord
 
   def allowed?(profile = Current.profile)
     self.class.allowed(profile).exists?(id: self.id)
+  end
+
+  private
+
+  def clear_charge_fields
+    self.value = nil
+    self.payment_method = nil
+    self.expiration_date = nil
+    self.payment_date = nil
   end
 end

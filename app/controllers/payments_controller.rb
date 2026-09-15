@@ -5,12 +5,14 @@ class PaymentsController < ApplicationController
   before_action(:set_payment, only: [ :show, :update, :destroy ])
   before_action(:check_permissions, except: [ :index, :status_chart, :monthly_chart ])
 
+  # Gratuitos não têm vencimento; sem NULLS LAST o DESC do Postgres os jogaria
+  # para o topo da ordenação padrão.
   sortable(
-    "expiration_date_asc" => { expiration_date: :asc },
-    "expiration_date_desc" => { expiration_date: :desc },
+    "expiration_date_asc" => Payment.arel_table[:expiration_date].asc.nulls_last,
+    "expiration_date_desc" => Payment.arel_table[:expiration_date].desc.nulls_last,
     "payment_date_asc" => { payment_date: :asc },
     "payment_date_desc" => { payment_date: :desc },
-    default: { expiration_date: :desc }
+    default: Payment.arel_table[:expiration_date].desc.nulls_last
   )
 
   def index
@@ -21,7 +23,7 @@ class PaymentsController < ApplicationController
     total = Payment.allowed.count
     total_filtered = filtered.count
     total_received = filtered.where.not(payment_date: nil).sum(:value)
-    total_to_receive = filtered.where(payment_date: nil).sum(:value)
+    total_to_receive = filtered.where(free: false, payment_date: nil).sum(:value)
 
     payments = paginate(filtered.order(order_by))
 
@@ -77,7 +79,7 @@ class PaymentsController < ApplicationController
   def status_chart
     payments = Payment.filtrate(filter_params.except(:status))
 
-    status_chart = [ :paid, :overdue, :unpaid ].map do |status|
+    status_chart = [ :paid, :overdue, :unpaid, :free ].map do |status|
       { status: status, count: payments.by_status(status).count }
     end
 
@@ -92,7 +94,7 @@ class PaymentsController < ApplicationController
     payments = payments.where(expiration_date: start_date..)
 
     received = payments.where.not(payment_date: nil)
-    to_receive = payments.where(payment_date: nil)
+    to_receive = payments.where(free: false, payment_date: nil)
 
     received_value = group_by_month(received, :sum)
     received_count = group_by_month(received, :count)
@@ -189,6 +191,7 @@ class PaymentsController < ApplicationController
         :payment_method,
         :service_id,
         :observations,
+        :free,
         attachments: []
       ).to_h.symbolize_keys
   end

@@ -27,4 +27,14 @@ module Authorizable
     render_not_allowed
     false
   end
+
+  # Bloqueia a ação quando o terapeuta informado não é do time do perfil atual
+  # (ele próprio ou um subordinado direto, ver Profile#team_ids). Admin passa.
+  def authorize_team!(therapist_id)
+    return true if Current.profile.admin?
+    return true if Current.profile.team_ids.include?(therapist_id.to_i)
+
+    render_not_allowed
+    false
+  end
 end

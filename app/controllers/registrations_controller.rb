@@ -83,7 +83,7 @@ class RegistrationsController < Devise::RegistrationsController
   ].freeze
   # Só o admin cadastra vínculo, situação e a própria flag de admin — os dois
   # últimos, antes, eram silenciosamente ignorados mesmo vindos do painel.
-  ADMIN_ATTRIBUTES = [ :admin, :active, :therapist_id, :default_value, :extra ].freeze
+  ADMIN_ATTRIBUTES = [ :admin, :active, :therapist_id, :supervisor_id, :default_value, :extra ].freeze
 
   # O mesmo endpoint atende o cadastro público (sem sessão) e a criação de
   # terapeuta pelo painel. Sem separar os campos, um visitante anônimo podia

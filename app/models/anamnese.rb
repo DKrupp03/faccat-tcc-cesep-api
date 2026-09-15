@@ -21,7 +21,7 @@ class Anamnese < ApplicationRecord
   def self.allowed(profile = Current.profile)
     return none if profile.nil?
     return all if profile.admin?
-    return joins(:patient).where(patient: { therapist_id: profile.id }) if profile.therapist?
+    return joins(:patient).where(patient: { therapist_id: profile.team_ids }) if profile.therapist?
     none
   end
 

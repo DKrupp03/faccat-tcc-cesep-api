@@ -118,7 +118,7 @@ class Payment < ApplicationRecord
   def self.allowed(profile = Current.profile)
     return none if profile.nil?
     return all if profile.admin?
-    return joins(:service).where(services: { therapist_id: profile.id }) if profile.therapist?
+    return joins(:service).where(services: { therapist_id: profile.team_ids }) if profile.therapist?
     none
   end
 

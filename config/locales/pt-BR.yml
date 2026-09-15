@@ -38,6 +38,7 @@ pt-BR:
         default_value: "Valor padrão"
         role: "Tipo de perfil"
         therapist: "Terapeuta"
+        supervisor: "Supervisor"
       user:
         email: "E-mail"
         password: "Senha"
@@ -122,6 +123,11 @@ pt-BR:
             birth:
               less_than: "Deve ser anterior à data de hoje!"
               greater_than: "Data de nascimento inválida!"
+            supervisor:
+              not_therapist: "Apenas terapeutas podem ter supervisor!"
+              self_supervision: "Um terapeuta não pode supervisionar a si mesmo!"
+              invalid: "O supervisor deve ser um terapeuta!"
+              circular: "Este terapeuta já é supervisor do selecionado!"
         service:
           attributes:
             date:

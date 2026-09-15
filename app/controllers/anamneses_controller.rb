@@ -33,9 +33,7 @@ class AnamnesesController < ApplicationController
   def check_permissions
     case params[:action]
     when "create"
-      unless Current.profile.admin? || @profile.therapist_id == Current.profile_id
-        render_not_allowed
-      end
+      authorize_team!(@profile.therapist_id)
     when "update", "show"
       authorize_record!(@anamnese)
     end

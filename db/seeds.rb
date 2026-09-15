@@ -46,6 +46,13 @@ therapist_profiles = 20.times.map do |i|
   profile
 end
 
+# ─── Supervisão ────────────────────────────────────────────────────────────────
+
+# Os três primeiros terapeutas supervisionam dois colegas cada.
+therapist_profiles.first(3).each_with_index do |supervisor, i|
+  therapist_profiles[3 + i * 2, 2].each { |subordinate| subordinate.update!(supervisor: supervisor) }
+end
+
 # ─── Pacientes ─────────────────────────────────────────────────────────────────
 
 patient_profiles = 100.times.map do |i|

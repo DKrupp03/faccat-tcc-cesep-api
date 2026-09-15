@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,8 +104,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_160000) do
     t.string "phone"
     t.string "rg"
     t.integer "role", null: false
+    t.integer "supervisor_id"
     t.integer "therapist_id"
     t.datetime "updated_at", null: false
+    t.index ["supervisor_id"], name: "index_profiles_on_supervisor_id"
     t.index ["therapist_id"], name: "index_profiles_on_therapist_id"
   end
 
@@ -172,6 +174,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_160000) do
   add_foreign_key "anamneses", "profiles", column: "therapist_id"
   add_foreign_key "medical_records", "services"
   add_foreign_key "payments", "services"
+  add_foreign_key "profiles", "profiles", column: "supervisor_id", on_delete: :nullify
   add_foreign_key "profiles", "profiles", column: "therapist_id"
   add_foreign_key "services", "profiles", column: "patient_id"
   add_foreign_key "services", "profiles", column: "therapist_id"

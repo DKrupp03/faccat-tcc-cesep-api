@@ -89,10 +89,7 @@ class MedicalRecordsController < ApplicationController
   end
 
   def authorize_patient!
-    return true if Current.profile.admin? || @profile.therapist_id == Current.profile_id
-
-    render_not_allowed
-    false
+    authorize_team!(@profile.therapist_id)
   end
 
   def authorize_service!

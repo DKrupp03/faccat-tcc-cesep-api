@@ -5,6 +5,9 @@ class Profile < ApplicationRecord
   belongs_to(:therapist, class_name: "Profile", optional: true)
   has_many(:patients, class_name: "Profile", foreign_key: :therapist_id, dependent: :nullify)
 
+  belongs_to(:supervisor, class_name: "Profile", optional: true)
+  has_many(:subordinates, class_name: "Profile", foreign_key: :supervisor_id, dependent: :nullify)
+
   has_one(:anamnese, class_name: "Anamnese", foreign_key: :patient_id, dependent: :destroy)
 
   has_many(:therapist_services, class_name: "Service", foreign_key: :therapist_id, dependent: :destroy)
@@ -46,6 +49,7 @@ class Profile < ApplicationRecord
     if: :patient?
   )
   validates(:role, presence: true)
+  validate(:supervisor_is_valid, if: -> { supervisor_id.present? })
 
   enum(:gender, { male: 0, female: 1, other: 2 })
   enum(:marital_status, { single: 0, married: 1, divorced: 2, widowed: 3 })
@@ -54,12 +58,22 @@ class Profile < ApplicationRecord
     postgraduate: 7, masters: 8, doctorate: 9 })
   enum(:role, { therapist: 0, patient: 1 })
 
-  # Terapeuta enxerga os demais terapeutas apenas para poder selecioná-los
-  # (vínculo do paciente, agendamento). Fora isso o perfil alheio não pode
-  # trafegar completo: CPF, RG, endereço e afins são dado pessoal (LGPD).
+  # Time do terapeuta: ele próprio e os subordinados diretos (sem cascata).
+  # É a unidade de acesso do não-admin em todo o sistema (ver `allowed` dos
+  # models). Memoizado porque Current.profile vive uma requisição.
+  def team_ids
+    @team_ids ||= [ self.id, *self.subordinates.ids ]
+  end
+
+  def supervisor?
+    self.subordinates.exists?
+  end
+
+  # Perfil completo só para o próprio time e os pacientes dele; os demais
+  # trafegam resumidos: CPF, RG, endereço e afins são dado pessoal (LGPD).
   def visible_in_full?(profile = Current.profile)
     return true if profile.nil? || profile.admin?
-    self.id == profile.id || self.therapist_id == profile.id
+    profile.team_ids.include?(self.id) || profile.team_ids.include?(self.therapist_id)
   end
 
   def summary
@@ -72,6 +86,7 @@ class Profile < ApplicationRecord
     profile = self.attributes
     profile.store(:photo_url, rails_blob_url(self.photo)) if self.photo.attached?
     profile.store(:user, self.user&.slice(:id, :email, :profile_id))
+    profile.store(:supervisor, self.supervisor&.summary) if self.therapist?
 
     if list_attributes
       profile.store(:patients_count, self.patients.size) if self.therapist?
@@ -81,7 +96,10 @@ class Profile < ApplicationRecord
       profile.store(:last_service, self.last_service&.starts_at)
       profile.store(:payment_status, self.payment_status)
     else
-      profile.store(:patients, self.patients.map(&:summary)) if self.therapist?
+      if self.therapist?
+        profile.store(:patients, self.patients.map(&:summary))
+        profile.store(:subordinates, self.subordinates.map(&:summary))
+      end
       profile.store(:services, self.services)
       profile.store(:photo, self.photo) if self.photo.attached?
       profile.store(:anamnese, self.anamnese) if self.anamnese
@@ -172,11 +190,17 @@ class Profile < ApplicationRecord
 
   # Escopo visível para o perfil autenticado. Só quem acessa o sistema é
   # terapeuta (paciente não tem login), então o fallback é fechado: perfil
-  # desconhecido não enxerga nada.
+  # desconhecido não enxerga nada. O não-admin vê os terapeutas do próprio
+  # time e os pacientes deles.
   def self.allowed(profile = Current.profile)
     return none if profile.nil?
     return all if profile.admin?
-    return where("role = 0 OR therapist_id = :id", id: profile.id) if profile.therapist?
+    if profile.therapist?
+      return where(
+        "(profiles.role = :therapist AND profiles.id IN (:ids)) OR profiles.therapist_id IN (:ids)",
+        therapist: roles[:therapist], ids: profile.team_ids
+      )
+    end
     none
   end
 
@@ -184,5 +208,17 @@ class Profile < ApplicationRecord
   # (o index chegou a listar perfis que o show recusava).
   def allowed?(profile = Current.profile)
     self.class.allowed(profile).exists?(id: self.id)
+  end
+
+  private
+
+  # Só terapeuta tem supervisor, e o supervisor também é terapeuta. Como o
+  # acesso vale só para subordinados diretos, basta barrar o ciclo de um nível.
+  def supervisor_is_valid
+    return errors.add(:supervisor, :not_therapist) unless self.therapist?
+    return errors.add(:supervisor, :self_supervision) if self.supervisor_id == self.id
+    return errors.add(:supervisor, :invalid) unless self.supervisor&.therapist?
+
+    errors.add(:supervisor, :circular) if self.id.present? && self.supervisor.supervisor_id == self.id
   end
 end

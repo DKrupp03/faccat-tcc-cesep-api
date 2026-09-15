@@ -131,21 +131,17 @@ class ServicesController < ApplicationController
     end
   end
 
-  # Paciente precisa estar no escopo permitido; terapeuta, ser o próprio
-  # usuário — só o admin agenda em nome de outro profissional.
+  # Paciente precisa estar no escopo permitido; terapeuta, ser do time do
+  # usuário (ele ou um subordinado) — só o admin agenda para qualquer um.
   def authorize_participants!
     attributes = service_params
     patient_id = attributes[:patient_id]
     therapist_id = attributes[:therapist_id]
 
     return false unless authorize_association!(Profile.patient, patient_id)
+    return true if therapist_id.blank?
 
-    if !Current.profile.admin? && therapist_id.present? && therapist_id.to_i != Current.profile_id
-      render_not_allowed
-      return false
-    end
-
-    true
+    authorize_team!(therapist_id)
   end
 
   # No escopo múltiplo a ação atinge outras ocorrências: todas precisam ser permitidas.

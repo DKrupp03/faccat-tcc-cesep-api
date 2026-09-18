@@ -18,10 +18,12 @@ class Anamnese < ApplicationRecord
     anamnese
   end
 
+  # Subconsulta em vez de JOIN: `where(patient: ...)` gerava "patient"."...",
+  # apelido que não bate com o "profiles" do `joins(:patient)` — a query nem rodava.
   def self.allowed(profile = Current.profile)
     return none if profile.nil?
     return all if profile.admin?
-    return joins(:patient).where(patient: { therapist_id: profile.team_ids }) if profile.therapist?
+    return where(patient_id: Profile.where(therapist_id: profile.team_ids)) if profile.therapist?
     none
   end
 

@@ -104,6 +104,7 @@ pt-BR:
         not_a_number: "Deve ser um número válido!"
         not_found: "%{model} não encontrado!"
         not_allowed: "Acesso não permitido!"
+        missing_rooms: "A lista de salas não foi enviada!"
         taken: "Já utilizado!"
         invalid_cpf: "CPF inválido!"
       models:

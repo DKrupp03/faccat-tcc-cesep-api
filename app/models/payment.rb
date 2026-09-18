@@ -107,7 +107,9 @@ class Payment < ApplicationRecord
     when :overdue
       where(free: false, payment_date: nil).where(expiration_date: ...Date.current)
     when :unpaid
-      where(free: false, payment_date: nil).where(expiration_date: Date.current..)
+      # Vencimento nulo também é "a receber", como em Payment#status.
+      where(free: false, payment_date: nil)
+        .where("payments.expiration_date IS NULL OR payments.expiration_date >= ?", Date.current)
     when :free
       where(free: true)
     else

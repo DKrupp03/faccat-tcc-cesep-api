@@ -13,21 +13,28 @@ class MedicalRecordsController < ApplicationController
   def index
     # Parte de MedicalRecord.allowed (que já faz o join com services) em vez da
     # associação :through do perfil, que gerava um segundo join na mesma tabela.
-    records = MedicalRecord.allowed
+    scoped = MedicalRecord.allowed
       .joins(:service)
       .where(services: { patient_id: @profile.id })
+
+    # `total` é o do paciente e `total_filtered` o do recorte — mesmo contrato
+    # dos demais painéis. Sem o segundo, o front não montava o "Carregar mais".
+    total = scoped.count
+
+    records = scoped
       .includes(:service)
       .with_attached_attachments
       .by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
       .order(order_by)
 
-    total = records.count
+    total_filtered = records.count
     records = paginate(records)
 
     render_json_success({
       medical_records: records.map(&:show),
-      total: total
+      total: total,
+      total_filtered: total_filtered
     })
   end
 

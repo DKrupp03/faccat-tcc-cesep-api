@@ -32,6 +32,17 @@ class User < ApplicationRecord
     user&.update_column(:jti, SecureRandom.uuid)
   end
 
+  # Perfil inativo não entra — antes desativar só escondia o terapeuta dos
+  # selects. Vale para a sessão já aberta: o hook after_set_user do Devise checa
+  # isto a cada requisição, então o JWT em circulação para de ser aceito na hora.
+  def active_for_authentication?
+    super && profile&.active?
+  end
+
+  def inactive_message
+    profile&.active? ? super : :inactive_profile
+  end
+
   def show
     user = self.attributes
     user.store(:profile, self.profile)

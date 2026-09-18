@@ -33,6 +33,9 @@ class AnamnesesController < ApplicationController
   def check_permissions
     case params[:action]
     when "create"
+      # Anamnese é documento de paciente; sem isto o admin pendurava uma em terapeuta.
+      return render_not_allowed unless @profile.patient?
+
       authorize_team!(@profile.therapist_id)
     when "update", "show"
       authorize_record!(@anamnese)

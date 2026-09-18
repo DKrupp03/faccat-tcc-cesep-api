@@ -147,8 +147,11 @@ class Profile < ApplicationRecord
     all
   end
 
+  # Terapeutas que atendem o paciente informado. Subconsulta em vez de JOIN: o
+  # auto-join vira "patients_profiles", mas `where(patients: ...)` gerava
+  # "patients"."id" — nome que não existia na query.
   def self.by_patient_id(patient_id)
-    return joins(:patients).where(patients: { id: patient_id }) if patient_id.present?
+    return where(id: Profile.where(id: patient_id).select(:therapist_id)) if patient_id.present?
     all
   end
 
@@ -180,7 +183,7 @@ class Profile < ApplicationRecord
     when :unpaid
       joined
         .where(payments: { free: false, payment_date: nil })
-        .where("payments.expiration_date >= ?", Date.current)
+        .where("payments.expiration_date IS NULL OR payments.expiration_date >= ?", Date.current)
     when :free
       joined.where(payments: { free: true })
     when :no_payment

@@ -64,14 +64,16 @@ class ProfilesController < ApplicationController
   end
 
   def update
-    @profile.photo.purge if profile_params[:remove_photo].present?
-
     # O e-mail do perfil é o mesmo do login: alterar só um dos dois separava
     # silenciosamente o cadastro da credencial de acesso.
     Profile.transaction do
       @profile.update!(profile_params.except(:remove_photo))
       sync_user_email!
     end
+
+    # Só depois do commit: o purge apaga o arquivo no storage e o rollback não
+    # desfaz isso — a foto sumia mesmo quando a validação reprovava o resto.
+    @profile.photo.purge if profile_params[:remove_photo].present?
 
     render_json_success({ profile: @profile.show(list_attributes: true) })
   rescue ActiveRecord::RecordInvalid => e

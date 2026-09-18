@@ -7,6 +7,7 @@ pt-BR:
     failure:
       already_authenticated: "Você já está logado."
       inactive: "Sua conta ainda não foi ativada."
+      inactive_profile: "Seu cadastro está inativo. Procure um administrador do CESEP."
       invalid: "%{authentication_keys} ou senha inválidos."
       locked: "Sua conta está bloqueada."
       last_attempt: "Você tem mais uma tentativa antes que sua conta seja bloqueada"

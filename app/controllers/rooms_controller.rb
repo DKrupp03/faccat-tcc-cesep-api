@@ -11,7 +11,13 @@ class RoomsController < ApplicationController
   # Recebe a lista completa da modal e a aplica de uma vez: salas ausentes são
   # excluídas, as com id são renomeadas e as sem id, criadas. Qualquer erro
   # desfaz tudo, para a modal nunca ficar meio salva.
+  # A lista precisa vir explicitamente: sem a chave `rooms`, o `fetch([])`
+  # devolvia [] e o destroy_all apagava o cadastro inteiro.
   def sync
+    unless params[:rooms].is_a?(Array)
+      return render_json_errors(I18n.t("activerecord.errors.messages.missing_rooms"))
+    end
+
     rooms = rooms_params
     kept_ids = rooms.filter_map { |room| room[:id].presence }
 

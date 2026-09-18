@@ -67,6 +67,8 @@ class RegistrationsController < Devise::RegistrationsController
     "Aa1#{SecureRandom.hex(12)}"
   end
 
+  # `deliver_later` porque, com o envio síncrono, uma falha de SMTP virava 500
+  # depois de o usuário já estar criado — cadastro feito e sem e-mail de senha.
   def send_set_password_instructions(user)
     return unless user.persisted?
 
@@ -74,7 +76,7 @@ class RegistrationsController < Devise::RegistrationsController
     user.reset_password_token = hashed
     user.reset_password_sent_at = Time.now.utc
     user.save(validate: false)
-    UserMailer.set_password_instructions(user, raw).deliver_now
+    UserMailer.set_password_instructions(user, raw).deliver_later
   end
 
   PUBLIC_ATTRIBUTES = [

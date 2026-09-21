@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -62,10 +62,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_180000) do
     t.date "date", null: false
     t.text "documentary_record"
     t.text "evolution", null: false
+    t.boolean "reviewed", default: false, null: false
+    t.datetime "reviewed_at"
+    t.integer "reviewer_id"
     t.integer "service_id", null: false
     t.text "supervision_record"
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["reviewer_id"], name: "index_medical_records_on_reviewer_id"
     t.index ["service_id"], name: "index_medical_records_on_service_id"
     t.index ["service_id"], name: "index_medical_records_on_service_id_unique", unique: true
   end
@@ -181,6 +185,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_180000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "anamneses", "profiles", column: "patient_id"
   add_foreign_key "anamneses", "profiles", column: "therapist_id"
+  add_foreign_key "medical_records", "profiles", column: "reviewer_id", on_delete: :nullify
   add_foreign_key "medical_records", "services"
   add_foreign_key "payments", "services"
   add_foreign_key "profiles", "profiles", column: "supervisor_id", on_delete: :nullify

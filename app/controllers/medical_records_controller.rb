@@ -22,10 +22,11 @@ class MedicalRecordsController < ApplicationController
     total = scoped.count
 
     records = scoped
-      .includes(:service)
+      .includes(:service, :reviewer)
       .with_attached_attachments
       .by_date_start(filter_params[:date_start])
       .by_date_end(filter_params[:date_end])
+      .by_reviewed(filter_params[:reviewed])
       .order(order_by)
 
     total_filtered = records.count
@@ -46,6 +47,7 @@ class MedicalRecordsController < ApplicationController
     # `@profile.medical_records` é has_many :through: construir por ela não
     # preenche o service_id (que vem do corpo e já foi autorizado acima).
     @record = MedicalRecord.new(record_params)
+    assign_review(@record)
 
     if @record.save
       render_json_success({ medical_record: @record.show })
@@ -61,7 +63,10 @@ class MedicalRecordsController < ApplicationController
     attributes = record_params
     new_attachments = attributes.delete(:attachments)
 
-    if @record.update(attributes)
+    @record.assign_attributes(attributes)
+    assign_review(@record)
+
+    if @record.save
       @record.attachments.attach(new_attachments) if new_attachments.present?
       render_json_success({ medical_record: @record.show })
     else
@@ -95,6 +100,17 @@ class MedicalRecordsController < ApplicationController
     end
   end
 
+  # O visto da supervisão fica fora do `permit`: quem não é o supervisor do
+  # terapeuta do atendimento manda o campo à toa (o front o desabilita), e
+  # ignorá-lo é melhor do que recusar a edição inteira do prontuário.
+  def assign_review(record)
+    reviewed = params.require(:medical_record).permit(:reviewed)[:reviewed]
+    return if reviewed.nil?
+    return unless record.reviewable_by?
+
+    record.apply_review(reviewed)
+  end
+
   def authorize_patient!
     authorize_team!(@profile.therapist_id)
   end
@@ -123,7 +139,8 @@ class MedicalRecordsController < ApplicationController
   def filter_params
     nested_filter_params(:medical_records, [
       :date_start,
-      :date_end
+      :date_end,
+      :reviewed
     ])
   end
 

@@ -33,6 +33,9 @@ class Service < ApplicationRecord
 
   enum(:status, { scheduled: 0, confirmed: 1, attended: 2, no_show: 3, cancelled: 4 })
   enum(:service_type, {
+    psychological_assessment: 11, # Avaliação Psicológica
+    psychological_support: 12, # Acolhimento Psicológico
+
     # Psicologia Clínica – Psicoterapias
     clinical_psychology_tcc: 0, clinical_psychology_psychoanalysis: 1,
     clinical_psychology_systemic: 2, clinical_psychology_humanistic: 3,

@@ -41,11 +41,25 @@ class MedicalRecord < ApplicationRecord
     where(reviewed: reviewed.to_i == 1)
   end
 
-  # O visto é do supervisor do terapeuta que fez o atendimento — e só dele:
-  # nem o próprio terapeuta nem o admin assinam a supervisão por ele.
-  def reviewable_by?(profile = Current.profile)
+  # O prontuário é do terapeuta do atendimento: criar, editar o que ele
+  # registrou e excluir são atos dele. Supervisor e admin não escrevem no
+  # lugar do terapeuta — o supervisor entra só pela supervisão, abaixo.
+  def writable_by?(profile = Current.profile)
+    return false if profile.nil?
+    self.service&.therapist_id == profile.id
+  end
+
+  # A supervisão (o visto e os registros dela) é do supervisor do terapeuta
+  # que fez o atendimento — e só dele: nem o próprio terapeuta nem o admin
+  # assinam ou comentam a supervisão por ele.
+  def supervisable_by?(profile = Current.profile)
     return false if profile.nil?
     self.service&.therapist&.supervisor_id == profile.id
+  end
+
+  # O visto segue a mesma regra dos demais campos da supervisão.
+  def reviewable_by?(profile = Current.profile)
+    supervisable_by?(profile)
   end
 
   # O visto carrega o par quem/quando, então a atribuição fica num ponto só.

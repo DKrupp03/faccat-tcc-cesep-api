@@ -1,0 +1,66 @@
+name: Reset DB (produção)
+
+# APAGA TODOS OS DADOS do banco de produção e recria apenas o admin do CESEP.
+# Faz backup para o S3 antes de qualquer coisa (ver script/reset_production.rb).
+#
+# Como usar: aba "Actions" -> "Reset DB (produção)" -> "Run workflow"
+# -> digitar exatamente  APAGAR TUDO  no campo de confirmação.
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacao:
+        description: "Digite APAGAR TUDO (em maiúsculas) para confirmar a limpeza do banco de produção"
+        type: string
+        required: true
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    # 1ª trava: sem a frase exata, nenhum passo roda.
+    if: ${{ inputs.confirmacao == 'APAGAR TUDO' }}
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar a chave SSH do servidor
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # Não verificar a host key (runner é efêmero e o IP é fixo/confiável).
+          printf 'Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile /dev/null\n  LogLevel ERROR\n' > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+          ssh-keyscan 18.231.22.133 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Rodar a limpeza em produção
+        env:
+          # As credenciais do admin NÃO ficam no repositório. Crie os dois secrets
+          # em Settings -> Secrets and variables -> Actions antes de rodar.
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          SERVER=ubuntu@18.231.22.133
+
+          if [ -z "${ADMIN_EMAIL:-}" ] || [ -z "${ADMIN_PASSWORD:-}" ]; then
+            echo "Secrets ADMIN_EMAIL e/ou ADMIN_PASSWORD não configurados — abortado." >&2
+            exit 1
+          fi
+
+          # O Kamal nomeia o container como tcc_cesep1-web-<versão>.
+          CT=$(ssh "$SERVER" "docker ps --filter name=tcc_cesep1-web --format '{{.Names}}' | head -1")
+          if [ -z "$CT" ]; then
+            echo "Nenhum container tcc_cesep1-web em execução — abortado." >&2
+            exit 1
+          fi
+          echo "Container: $CT"
+
+          # O script vai pela stdin (bin/rails runner - lê o programa dali), então
+          # não precisa estar dentro da imagem: nada de redeploy, nada de escapar aspas.
+          # 2ª trava: o próprio script confere RESET_CONFIRM e Rails.env.
+          ssh "$SERVER" "docker exec -i \
+              -e RESET_CONFIRM='APAGAR TUDO' \
+              -e ADMIN_EMAIL='$ADMIN_EMAIL' \
+              -e ADMIN_PASSWORD='$ADMIN_PASSWORD' \
+              $CT bin/rails runner -" \
+            < script/reset_production.rb
